@@ -23,7 +23,7 @@ const navItems = [
   { icon: Users, label: "Leads", path: "/leads" },
   { icon: TrendingUp, label: "Pipeline", path: "/pipeline" },
   { icon: ListTodo, label: "Tasks", path: "/tasks" },
-  { icon: Sparkles, label: "AI Assistant", path: "/ai" },
+  { icon: Sparkles, label: "AI Assistant", path: "/ai-assistant" },
   { icon: Mail, label: "Campaigns", path: "/campaigns" },
   { icon: MessageCircle, label: "WhatsApp", path: "/whatsapp" },
   { icon: Phone, label: "Calls", path: "/calls" },
