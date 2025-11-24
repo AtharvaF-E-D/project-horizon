@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 const Leads = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
 
   const leads = [
@@ -48,7 +50,7 @@ const Leads = () => {
               <h1 className="font-heading text-3xl font-bold mb-2">Leads</h1>
               <p className="text-muted-foreground">Manage and track all your leads in one place</p>
             </div>
-            <Button className="gradient-primary text-primary-foreground">
+            <Button className="gradient-primary text-primary-foreground" onClick={() => navigate("/leads/new")}>
               <Plus className="w-4 h-4 mr-2" />
               Add New Lead
             </Button>
@@ -90,7 +92,7 @@ const Leads = () => {
               </TableHeader>
               <TableBody>
                 {leads.map((lead) => (
-                  <TableRow key={lead.id} className="cursor-pointer hover:bg-muted/50">
+                  <TableRow key={lead.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/leads/${lead.id}`)}>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-sm font-semibold">

@@ -7,6 +7,10 @@ import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import Leads from "./pages/Leads";
 import Pipeline from "./pages/Pipeline";
+import LeadDetails from "./pages/LeadDetails";
+import AddLead from "./pages/AddLead";
+import AIAssistant from "./pages/AIAssistant";
+import Tasks from "./pages/Tasks";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -21,7 +25,11 @@ const App = () => (
           <Route path="/" element={<Landing />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/leads" element={<Leads />} />
+          <Route path="/leads/:id" element={<LeadDetails />} />
+          <Route path="/leads/new" element={<AddLead />} />
           <Route path="/pipeline" element={<Pipeline />} />
+          <Route path="/ai-assistant" element={<AIAssistant />} />
+          <Route path="/tasks" element={<Tasks />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
