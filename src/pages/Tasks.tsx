@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { DashboardNav } from "@/components/layout/DashboardNav";
-import { Navbar } from "@/components/layout/Navbar";
+import { DashboardNavbar } from "@/components/layout/DashboardNavbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,7 +68,7 @@ const Tasks = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      <Navbar />
+      <DashboardNavbar />
       <DashboardNav />
       <main className="ml-64 pt-16 p-8">
         <div className="mb-8 animate-fade-in">

@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DashboardNav } from "@/components/layout/DashboardNav";
-import { Navbar } from "@/components/layout/Navbar";
+import { DashboardNavbar } from "@/components/layout/DashboardNavbar";
 import { Search, Filter, Plus, Mail, Phone, MoreVertical } from "lucide-react";
 import {
   Table,
@@ -39,7 +39,7 @@ const Leads = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <DashboardNavbar />
       <DashboardNav />
       
       <main className="ml-64 pt-16 p-8">

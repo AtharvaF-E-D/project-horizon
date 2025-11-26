@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Navbar } from "@/components/layout/Navbar";
+import { DashboardNavbar } from "@/components/layout/DashboardNavbar";
 import { DashboardNav } from "@/components/layout/DashboardNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,7 +37,7 @@ export default function Reports() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <DashboardNavbar />
       <DashboardNav />
       
       <main className="ml-64 mt-16 p-8">

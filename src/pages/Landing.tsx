@@ -36,13 +36,13 @@ const Landing = () => {
               
               <div className="flex flex-wrap gap-4">
                 <Button size="lg" className="gradient-primary text-primary-foreground hover:opacity-90 transition-smooth" asChild>
-                  <Link to="/signup">
+                  <Link to="/auth">
                     Start Free Trial
                     <ArrowRight className="ml-2 w-4 h-4" />
                   </Link>
                 </Button>
                 <Button size="lg" variant="outline" asChild>
-                  <Link to="/demo">Watch Demo</Link>
+                  <Link to="/dashboard">View Dashboard</Link>
                 </Button>
               </div>
 
@@ -153,10 +153,10 @@ const Landing = () => {
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
               <Button size="lg" variant="secondary" asChild>
-                <Link to="/signup">Start Free Trial</Link>
+                <Link to="/auth">Start Free Trial</Link>
               </Button>
               <Button size="lg" variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20" asChild>
-                <Link to="/contact">Contact Sales</Link>
+                <Link to="/dashboard">View Dashboard</Link>
               </Button>
             </div>
           </Card>

@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DashboardNav } from "@/components/layout/DashboardNav";
-import { Navbar } from "@/components/layout/Navbar";
+import { DashboardNavbar } from "@/components/layout/DashboardNavbar";
 import { Plus, MoreVertical, DollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -33,7 +33,7 @@ const Pipeline = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <DashboardNavbar />
       <DashboardNav />
       
       <main className="ml-64 pt-16 p-8">

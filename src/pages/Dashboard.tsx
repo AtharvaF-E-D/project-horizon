@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DashboardNav } from "@/components/layout/DashboardNav";
-import { Navbar } from "@/components/layout/Navbar";
+import { DashboardNavbar } from "@/components/layout/DashboardNavbar";
 import { TrendingUp, Users, Target, DollarSign, Plus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -21,7 +21,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <DashboardNavbar />
       <DashboardNav />
       
       <main className="ml-64 pt-16 p-8">
