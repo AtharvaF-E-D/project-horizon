@@ -30,10 +30,10 @@ export const Navbar = () => {
 
           <div className="flex items-center gap-3">
             <Button variant="ghost" asChild className="hidden md:inline-flex">
-              <Link to="/login">Sign In</Link>
+              <Link to="/auth">Sign In</Link>
             </Button>
             <Button asChild className="gradient-primary text-primary-foreground hover:opacity-90 transition-smooth">
-              <Link to="/signup">Get Started</Link>
+              <Link to="/auth">Get Started</Link>
             </Button>
             <Button variant="ghost" size="icon" className="md:hidden">
               <Menu className="w-5 h-5" />

@@ -15,6 +15,11 @@ import Campaigns from "./pages/Campaigns";
 import WhatsApp from "./pages/WhatsApp";
 import Calls from "./pages/Calls";
 import Reports from "./pages/Reports";
+import Auth from "./pages/Auth";
+import Settings from "./pages/Settings";
+import Profile from "./pages/Profile";
+import Team from "./pages/Team";
+import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +32,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Landing />} />
+          <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/leads" element={<Leads />} />
           <Route path="/leads/:id" element={<LeadDetails />} />
@@ -38,6 +44,10 @@ const App = () => (
           <Route path="/whatsapp" element={<WhatsApp />} />
           <Route path="/calls" element={<Calls />} />
           <Route path="/reports" element={<Reports />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/team" element={<Team />} />
+          <Route path="/notifications" element={<Notifications />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
