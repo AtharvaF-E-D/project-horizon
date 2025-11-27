@@ -9,6 +9,13 @@ import Leads from "./pages/Leads";
 import Pipeline from "./pages/Pipeline";
 import LeadDetails from "./pages/LeadDetails";
 import AddLead from "./pages/AddLead";
+import Deals from "./pages/Deals";
+import DealDetails from "./pages/DealDetails";
+import Contacts from "./pages/Contacts";
+import ContactDetails from "./pages/ContactDetails";
+import Companies from "./pages/Companies";
+import CompanyDetails from "./pages/CompanyDetails";
+import Analytics from "./pages/Analytics";
 import AIAssistant from "./pages/AIAssistant";
 import Tasks from "./pages/Tasks";
 import Campaigns from "./pages/Campaigns";
@@ -38,6 +45,16 @@ const App = () => (
           <Route path="/leads/:id" element={<LeadDetails />} />
           <Route path="/leads/new" element={<AddLead />} />
           <Route path="/pipeline" element={<Pipeline />} />
+          <Route path="/deals" element={<Deals />} />
+          <Route path="/deals/:id" element={<DealDetails />} />
+          <Route path="/deals/new" element={<DealDetails />} />
+          <Route path="/contacts" element={<Contacts />} />
+          <Route path="/contacts/:id" element={<ContactDetails />} />
+          <Route path="/contacts/new" element={<ContactDetails />} />
+          <Route path="/companies" element={<Companies />} />
+          <Route path="/companies/:id" element={<CompanyDetails />} />
+          <Route path="/companies/new" element={<CompanyDetails />} />
+          <Route path="/analytics" element={<Analytics />} />
           <Route path="/ai-assistant" element={<AIAssistant />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/campaigns" element={<Campaigns />} />

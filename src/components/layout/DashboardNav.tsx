@@ -14,7 +14,12 @@ import {
   Calendar,
   ShoppingCart,
   Settings,
-  Bell,
+  Building2,
+  UserCircle,
+  DollarSign,
+  Bot,
+  CheckSquare,
+  Megaphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -22,16 +27,16 @@ const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: Users, label: "Leads", path: "/leads" },
   { icon: TrendingUp, label: "Pipeline", path: "/pipeline" },
-  { icon: ListTodo, label: "Tasks", path: "/tasks" },
-  { icon: Sparkles, label: "AI Assistant", path: "/ai-assistant" },
-  { icon: Mail, label: "Campaigns", path: "/campaigns" },
+  { icon: DollarSign, label: "Deals", path: "/deals" },
+  { icon: UserCircle, label: "Contacts", path: "/contacts" },
+  { icon: Building2, label: "Companies", path: "/companies" },
+  { icon: CheckSquare, label: "Tasks", path: "/tasks" },
+  { icon: Megaphone, label: "Campaigns", path: "/campaigns" },
   { icon: MessageCircle, label: "WhatsApp", path: "/whatsapp" },
   { icon: Phone, label: "Calls", path: "/calls" },
   { icon: BarChart3, label: "Reports", path: "/reports" },
-  { icon: FileText, label: "Invoices", path: "/invoices" },
-  { icon: Calendar, label: "Social", path: "/social" },
-  { icon: ShoppingCart, label: "E-commerce", path: "/ecommerce" },
-  { icon: Settings, label: "Settings", path: "/settings" },
+  { icon: BarChart3, label: "Analytics", path: "/analytics" },
+  { icon: Bot, label: "AI Assistant", path: "/ai-assistant" },
 ];
 
 export const DashboardNav = () => {
