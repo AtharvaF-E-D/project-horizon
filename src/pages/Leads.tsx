@@ -1,40 +1,69 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DashboardNav } from "@/components/layout/DashboardNav";
 import { DashboardNavbar } from "@/components/layout/DashboardNavbar";
-import { Search, Filter, Plus, Mail, Phone, MoreVertical } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, Plus, Mail, Phone, Building, TrendingUp, Users, Target } from "lucide-react";
 
 const Leads = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
 
-  const leads = [
-    { id: 1, name: "Sarah Johnson", email: "sarah@techcorp.com", company: "TechCorp", phone: "+1234567890", status: "Hot", value: "$12.5K", source: "Website" },
-    { id: 2, name: "Mike Anderson", email: "mike@startupxyz.com", company: "StartupXYZ", phone: "+1234567891", status: "Warm", value: "$8.3K", source: "Referral" },
-    { id: 3, name: "Emily Davis", email: "emily@enterprise.com", company: "Enterprise Co", phone: "+1234567892", status: "Cold", value: "$25K", source: "LinkedIn" },
-    { id: 4, name: "John Smith", email: "john@business.com", company: "Business Inc", phone: "+1234567893", status: "Hot", value: "$15K", source: "Campaign" },
-    { id: 5, name: "Lisa Chen", email: "lisa@company.com", company: "Company Ltd", phone: "+1234567894", status: "Warm", value: "$18.7K", source: "Website" },
-  ];
+  const { data: leads, isLoading } = useQuery({
+    queryKey: ["leads", statusFilter, sourceFilter],
+    queryFn: async () => {
+      let query = supabase
+        .from("leads")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (statusFilter !== "all") {
+        query = query.eq("status", statusFilter as any);
+      }
+      if (sourceFilter !== "all") {
+        query = query.eq("source", sourceFilter as any);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const filteredLeads = leads?.filter((lead) => {
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      lead.first_name.toLowerCase().includes(searchLower) ||
+      lead.last_name.toLowerCase().includes(searchLower) ||
+      lead.email?.toLowerCase().includes(searchLower) ||
+      lead.company?.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const stats = {
+    total: leads?.length || 0,
+    new: leads?.filter(l => l.status === "new").length || 0,
+    qualified: leads?.filter(l => l.status === "qualified").length || 0,
+    converted: leads?.filter(l => l.status === "converted").length || 0,
+  };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Hot": return "bg-red-100 text-red-700 hover:bg-red-200";
-      case "Warm": return "bg-yellow-100 text-yellow-700 hover:bg-yellow-200";
-      case "Cold": return "bg-blue-100 text-blue-700 hover:bg-blue-200";
-      default: return "bg-gray-100 text-gray-700";
-    }
+    const colors = {
+      new: "bg-blue-500/10 text-blue-500",
+      contacted: "bg-purple-500/10 text-purple-500",
+      qualified: "bg-green-500/10 text-green-500",
+      unqualified: "bg-red-500/10 text-red-500",
+      converted: "bg-emerald-500/10 text-emerald-500",
+    };
+    return colors[status as keyof typeof colors] || "bg-muted text-muted-foreground";
   };
 
   return (
@@ -47,92 +76,170 @@ const Leads = () => {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="font-heading text-3xl font-bold mb-2">Leads</h1>
-              <p className="text-muted-foreground">Manage and track all your leads in one place</p>
+              <h1 className="text-3xl font-bold">Leads</h1>
+              <p className="text-muted-foreground">Manage and track your sales leads</p>
             </div>
-            <Button className="gradient-primary text-primary-foreground" onClick={() => navigate("/leads/new")}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add New Lead
+            <Button onClick={() => navigate("/leads/new")} className="gap-2">
+              <Plus className="w-4 h-4" />
+              Add Lead
             </Button>
           </div>
 
-          {/* Search and Filters */}
-          <Card className="p-4">
-            <div className="flex flex-wrap gap-4">
-              <div className="relative flex-1 min-w-[300px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search leads by name, company, or email..." 
-                  className="pl-10"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Total Leads</p>
+                    <p className="text-2xl font-bold">{stats.total}</p>
+                  </div>
+                  <Users className="w-8 h-8 text-primary" />
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">New</p>
+                    <p className="text-2xl font-bold">{stats.new}</p>
+                  </div>
+                  <TrendingUp className="w-8 h-8 text-blue-500" />
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Qualified</p>
+                    <p className="text-2xl font-bold">{stats.qualified}</p>
+                  </div>
+                  <Target className="w-8 h-8 text-green-500" />
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Converted</p>
+                    <p className="text-2xl font-bold">{stats.converted}</p>
+                  </div>
+                  <TrendingUp className="w-8 h-8 text-emerald-500" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Filters */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search leads..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full md:w-[180px]">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="new">New</SelectItem>
+                    <SelectItem value="contacted">Contacted</SelectItem>
+                    <SelectItem value="qualified">Qualified</SelectItem>
+                    <SelectItem value="unqualified">Unqualified</SelectItem>
+                    <SelectItem value="converted">Converted</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={sourceFilter} onValueChange={setSourceFilter}>
+                  <SelectTrigger className="w-full md:w-[180px]">
+                    <SelectValue placeholder="Source" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Sources</SelectItem>
+                    <SelectItem value="website">Website</SelectItem>
+                    <SelectItem value="referral">Referral</SelectItem>
+                    <SelectItem value="social_media">Social Media</SelectItem>
+                    <SelectItem value="email_campaign">Email Campaign</SelectItem>
+                    <SelectItem value="cold_call">Cold Call</SelectItem>
+                    <SelectItem value="event">Event</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <Button variant="outline" className="gap-2">
-                <Filter className="w-4 h-4" />
-                Filters
-              </Button>
-              <Button variant="outline">Export</Button>
-            </div>
+            </CardContent>
           </Card>
 
-          {/* Leads Table */}
-          <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Company</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Value</TableHead>
-                  <TableHead>Source</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {leads.map((lead) => (
-                  <TableRow key={lead.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/leads/${lead.id}`)}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-sm font-semibold">
-                          {lead.name.split(' ').map(n => n[0]).join('')}
+          {/* Leads List */}
+          <div className="grid gap-4">
+            {isLoading ? (
+              <Card><CardContent className="p-8 text-center">Loading leads...</CardContent></Card>
+            ) : filteredLeads && filteredLeads.length > 0 ? (
+              filteredLeads.map((lead) => (
+                <Card 
+                  key={lead.id} 
+                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => navigate(`/leads/${lead.id}`)}
+                >
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2 flex-1">
+                        <div className="flex items-center gap-3">
+                          <h3 className="text-lg font-semibold">
+                            {lead.first_name} {lead.last_name}
+                          </h3>
+                          <Badge className={getStatusColor(lead.status)}>
+                            {lead.status}
+                          </Badge>
+                          <Badge variant="outline">{lead.source}</Badge>
                         </div>
-                        <div className="font-medium">{lead.name}</div>
+                        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                          {lead.company && (
+                            <div className="flex items-center gap-1">
+                              <Building className="w-4 h-4" />
+                              {lead.company}
+                            </div>
+                          )}
+                          {lead.email && (
+                            <div className="flex items-center gap-1">
+                              <Mail className="w-4 h-4" />
+                              {lead.email}
+                            </div>
+                          )}
+                          {lead.phone && (
+                            <div className="flex items-center gap-1">
+                              <Phone className="w-4 h-4" />
+                              {lead.phone}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </TableCell>
-                    <TableCell>{lead.company}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Mail className="w-3 h-3 text-muted-foreground" />
-                          {lead.email}
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Phone className="w-3 h-3" />
-                          {lead.phone}
-                        </div>
+                      <div className="text-right">
+                        <div className="text-sm text-muted-foreground">Score</div>
+                        <div className="text-2xl font-bold text-primary">{lead.score}</div>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(lead.status)}>
-                        {lead.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-semibold">{lead.value}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{lead.source}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon">
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Card>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <p className="text-muted-foreground">No leads found</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
       </main>
     </div>
