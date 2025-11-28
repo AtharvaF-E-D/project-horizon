@@ -1,40 +1,104 @@
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { DashboardNav } from "@/components/layout/DashboardNav";
 import { DashboardNavbar } from "@/components/layout/DashboardNavbar";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar as CalendarIcon, CheckCircle2, Clock, Plus, Search, Filter } from "lucide-react";
-
-interface Task {
-  id: number;
-  title: string;
-  priority: "low" | "medium" | "high";
-  dueDate: string;
-  category: string;
-  assignedTo?: string;
-  completed: boolean;
-}
+import { Plus, Calendar, CheckSquare, Square } from "lucide-react";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 const Tasks = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [tasks, setTasks] = useState<Task[]>([
-    { id: 1, title: "Follow up with Sarah Johnson", priority: "high", dueDate: "2024-01-20", category: "Follow-up", assignedTo: "You", completed: false },
-    { id: 2, title: "Send proposal to TechCorp", priority: "high", dueDate: "2024-01-20", category: "Proposal", assignedTo: "You", completed: false },
-    { id: 3, title: "Schedule demo for Acme Inc", priority: "medium", dueDate: "2024-01-21", category: "Meeting", assignedTo: "You", completed: false },
-    { id: 4, title: "Review contract terms", priority: "medium", dueDate: "2024-01-22", category: "Review", assignedTo: "Legal Team", completed: false },
-    { id: 5, title: "Call Michael Chen", priority: "low", dueDate: "2024-01-23", category: "Follow-up", assignedTo: "You", completed: true },
-    { id: 6, title: "Update pipeline report", priority: "medium", dueDate: "2024-01-24", category: "Admin", assignedTo: "You", completed: false },
-  ]);
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [priorityFilter, setPriorityFilter] = useState<string>("all");
 
-  const toggleTaskCompletion = (taskId: number) => {
-    setTasks(tasks.map(task =>
-      task.id === taskId ? { ...task, completed: !task.completed } : task
-    ));
-  };
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    due_date: "",
+    priority: "medium",
+    status: "todo",
+  });
+
+  const { data: tasks, isLoading } = useQuery({
+    queryKey: ["tasks", statusFilter, priorityFilter],
+    queryFn: async () => {
+      let query = supabase
+        .from("tasks")
+        .select("*")
+        .order("due_date", { ascending: true, nullsFirst: false });
+
+      if (statusFilter !== "all") {
+        query = query.eq("status", statusFilter as any);
+      }
+      if (priorityFilter !== "all") {
+        query = query.eq("priority", priorityFilter as any);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error("Not authenticated");
+
+      const { error } = await supabase
+        .from("tasks")
+        .insert([{ 
+          ...formData, 
+          user_id: user.id,
+          priority: formData.priority as any,
+          status: formData.status as any
+        }]);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      toast.success("Task created successfully");
+      setIsOpen(false);
+      setFormData({
+        title: "",
+        description: "",
+        due_date: "",
+        priority: "medium",
+        status: "todo",
+      });
+    },
+    onError: (error) => {
+      toast.error(`Error: ${error.message}`);
+    },
+  });
+
+  const toggleStatusMutation = useMutation({
+    mutationFn: async ({ id, currentStatus }: { id: string; currentStatus: string }) => {
+      const newStatus = currentStatus === "completed" ? "todo" : "completed";
+      const { error } = await supabase
+        .from("tasks")
+        .update({ status: newStatus as any })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    },
+    onError: (error) => {
+      toast.error(`Error: ${error.message}`);
+    },
+  });
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
