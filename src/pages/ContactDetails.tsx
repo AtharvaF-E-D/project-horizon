@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Loader2, Trash2 } from "lucide-react";
@@ -22,12 +23,28 @@ const ContactDetails = () => {
   const [phone, setPhone] = useState("");
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
+  const [companyId, setCompanyId] = useState<string>("");
+  const [companies, setCompanies] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
+    fetchCompanies();
     if (id && id !== "new") {
       fetchContact();
     }
   }, [id]);
+
+  const fetchCompanies = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("companies")
+        .select("id, name")
+        .order("name");
+      if (error) throw error;
+      setCompanies(data || []);
+    } catch (error) {
+      console.error("Error fetching companies:", error);
+    }
+  };
 
   const fetchContact = async () => {
     try {
@@ -46,6 +63,7 @@ const ContactDetails = () => {
         setPhone(data.phone || "");
         setTitle(data.title || "");
         setNotes(data.notes || "");
+        setCompanyId(data.company_id || "");
       }
     } catch (error: any) {
       toast({
@@ -66,6 +84,7 @@ const ContactDetails = () => {
         phone: phone || null,
         title: title || null,
         notes: notes || null,
+        company_id: companyId || null,
         user_id: (await supabase.auth.getUser()).data.user?.id,
       };
 
@@ -187,6 +206,23 @@ const ContactDetails = () => {
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="Sales Manager"
                   />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="company">Company</Label>
+                  <Select value={companyId} onValueChange={setCompanyId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a company" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">None</SelectItem>
+                      {companies.map((company) => (
+                        <SelectItem key={company.id} value={company.id}>
+                          {company.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="grid gap-2">
