@@ -2,14 +2,15 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { DashboardNavbar } from "@/components/layout/DashboardNavbar";
 import { DashboardNav } from "@/components/layout/DashboardNav";
-import { Card } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Loader2, Trash2 } from "lucide-react";
+import { ArrowLeft, Loader2, Trash2, Mail, Phone, User } from "lucide-react";
 
 const CompanyDetails = () => {
   const { id } = useParams();
@@ -23,6 +24,7 @@ const CompanyDetails = () => {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
+  const [contacts, setContacts] = useState<any[]>([]);
 
   useEffect(() => {
     if (id && id !== "new") {
@@ -49,6 +51,14 @@ const CompanyDetails = () => {
         setAddress(data.address || "");
         setNotes(data.notes || "");
       }
+
+      // Fetch related contacts
+      const { data: contactsData } = await supabase
+        .from("contacts")
+        .select("*")
+        .eq("company_id", id);
+      
+      setContacts(contactsData || []);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -230,6 +240,48 @@ const CompanyDetails = () => {
                 </div>
               </div>
             </Card>
+
+            {id !== "new" && contacts.length > 0 && (
+              <Card className="p-6 mt-6">
+                <CardHeader className="px-0 pt-0">
+                  <CardTitle>Related Contacts ({contacts.length})</CardTitle>
+                </CardHeader>
+                <CardContent className="px-0 pb-0">
+                  <div className="space-y-3">
+                    {contacts.map((contact) => (
+                      <Card
+                        key={contact.id}
+                        className="p-4 hover:bg-accent cursor-pointer transition-colors"
+                        onClick={() => navigate(`/contacts/${contact.id}`)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-10 w-10">
+                            <AvatarFallback>
+                              {contact.first_name[0]}
+                              {contact.last_name[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium">
+                              {contact.first_name} {contact.last_name}
+                            </p>
+                            {contact.title && (
+                              <p className="text-sm text-muted-foreground truncate">
+                                {contact.title}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex gap-2 text-muted-foreground">
+                            {contact.email && <Mail className="h-4 w-4" />}
+                            {contact.phone && <Phone className="h-4 w-4" />}
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </main>
       </div>
