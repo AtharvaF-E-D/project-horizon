@@ -7,14 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Calendar, CheckSquare, Square } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Calendar, CheckSquare, Square, Search, Filter, Clock, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import type { Tables } from "@/integrations/supabase/types";
+
+type Task = Tables<"tasks">;
 
 const Tasks = () => {
   const queryClient = useQueryClient();
@@ -22,6 +26,7 @@ const Tasks = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [formData, setFormData] = useState({
     title: "",
@@ -113,12 +118,12 @@ const Tasks = () => {
     }
   };
 
-  const activeTasks = tasks.filter(t => !t.completed);
-  const completedTasks = tasks.filter(t => t.completed);
+  const activeTasks = tasks?.filter(t => t.status !== "completed") || [];
+  const completedTasks = tasks?.filter(t => t.status === "completed") || [];
 
   // Group tasks by date for calendar view
-  const tasksByDate = tasks.reduce((acc, task) => {
-    const date = task.dueDate;
+  const tasksByDate = (tasks || []).reduce((acc, task) => {
+    const date = task.due_date || "No date";
     if (!acc[date]) acc[date] = [];
     acc[date].push(task);
     return acc;
@@ -127,7 +132,7 @@ const Tasks = () => {
   const stats = [
     { label: "Active Tasks", value: activeTasks.length, icon: Clock, color: "text-primary" },
     { label: "Completed", value: completedTasks.length, icon: CheckCircle2, color: "text-green-500" },
-    { label: "High Priority", value: tasks.filter(t => t.priority === "high" && !t.completed).length, icon: CalendarIcon, color: "text-red-500" },
+    { label: "High Priority", value: tasks?.filter(t => t.priority === "high" && t.status !== "completed").length || 0, icon: Calendar, color: "text-red-500" },
   ];
 
   return (
@@ -204,8 +209,8 @@ const Tasks = () => {
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
                         <Checkbox
-                          checked={task.completed}
-                          onCheckedChange={() => toggleTaskCompletion(task.id)}
+                          checked={task.status === "completed"}
+                          onCheckedChange={() => toggleStatusMutation.mutate({ id: task.id, currentStatus: task.status || "todo" })}
                           className="mt-1"
                         />
                         <div className="flex-1">
@@ -217,11 +222,10 @@ const Tasks = () => {
                           </div>
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <span className="flex items-center gap-1">
-                              <CalendarIcon className="w-3 h-3" />
-                              {task.dueDate}
+                              <Calendar className="w-3 h-3" />
+                              {task.due_date ? new Date(task.due_date).toLocaleDateString() : "No date"}
                             </span>
-                            <Badge variant="secondary">{task.category}</Badge>
-                            {task.assignedTo && <span>Assigned to: {task.assignedTo}</span>}
+                            {task.assigned_to && <Badge variant="secondary">Assigned</Badge>}
                           </div>
                         </div>
                       </div>
@@ -246,8 +250,8 @@ const Tasks = () => {
                           style={{ animationDelay: `${index * 50}ms` }}
                         >
                           <Checkbox
-                            checked={task.completed}
-                            onCheckedChange={() => toggleTaskCompletion(task.id)}
+                            checked={task.status === "completed"}
+                            onCheckedChange={() => toggleStatusMutation.mutate({ id: task.id, currentStatus: task.status || "todo" })}
                             className="mt-1"
                           />
                           <div className="flex-1">
@@ -259,10 +263,9 @@ const Tasks = () => {
                             </div>
                             <div className="flex items-center gap-4 text-sm text-muted-foreground">
                               <span className="flex items-center gap-1">
-                                <CalendarIcon className="w-3 h-3" />
-                                {task.dueDate}
+                                <Calendar className="w-3 h-3" />
+                                {task.due_date ? new Date(task.due_date).toLocaleDateString() : "No date"}
                               </span>
-                              <Badge variant="secondary">{task.category}</Badge>
                             </div>
                           </div>
                         </div>
@@ -285,8 +288,8 @@ const Tasks = () => {
                   {Object.entries(tasksByDate).map(([date, dateTasks], dateIndex) => (
                     <div key={date} className="animate-fade-in" style={{ animationDelay: `${dateIndex * 100}ms` }}>
                       <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                        <CalendarIcon className="w-5 h-5 text-primary" />
-                        {new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                        <Calendar className="w-5 h-5 text-primary" />
+                        {date === "No date" ? date : new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                       </h3>
                       <div className="space-y-2 ml-7">
                         {dateTasks.map((task, taskIndex) => (
@@ -296,18 +299,17 @@ const Tasks = () => {
                             style={{ animationDelay: `${(dateIndex * 100) + (taskIndex * 50)}ms` }}
                           >
                             <Checkbox
-                              checked={task.completed}
-                              onCheckedChange={() => toggleTaskCompletion(task.id)}
+                              checked={task.status === "completed"}
+                              onCheckedChange={() => toggleStatusMutation.mutate({ id: task.id, currentStatus: task.status || "todo" })}
                             />
                             <div className="flex-1">
-                              <p className={`font-medium ${task.completed ? 'line-through opacity-60' : ''}`}>
+                              <p className={`font-medium ${task.status === "completed" ? 'line-through opacity-60' : ''}`}>
                                 {task.title}
                               </p>
                             </div>
-                            <Badge variant="outline" className={`${getPriorityColor(task.priority)} text-white`}>
+                            <Badge variant="outline" className={`${getPriorityColor(task.priority || "medium")} text-white`}>
                               {task.priority}
                             </Badge>
-                            <Badge variant="secondary">{task.category}</Badge>
                           </div>
                         ))}
                       </div>
