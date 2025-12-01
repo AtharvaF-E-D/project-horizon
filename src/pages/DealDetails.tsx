@@ -23,12 +23,44 @@ const DealDetails = () => {
   const [probability, setProbability] = useState("");
   const [closeDate, setCloseDate] = useState("");
   const [notes, setNotes] = useState("");
+  const [companyId, setCompanyId] = useState<string>("");
+  const [contactId, setContactId] = useState<string>("");
+  const [companies, setCompanies] = useState<{ id: string; name: string }[]>([]);
+  const [contacts, setContacts] = useState<{ id: string; first_name: string; last_name: string }[]>([]);
 
   useEffect(() => {
+    fetchCompanies();
+    fetchContacts();
     if (id && id !== "new") {
       fetchDeal();
     }
   }, [id]);
+
+  const fetchCompanies = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("companies")
+        .select("id, name")
+        .order("name");
+      if (error) throw error;
+      setCompanies(data || []);
+    } catch (error) {
+      console.error("Error fetching companies:", error);
+    }
+  };
+
+  const fetchContacts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("contacts")
+        .select("id, first_name, last_name")
+        .order("first_name");
+      if (error) throw error;
+      setContacts(data || []);
+    } catch (error) {
+      console.error("Error fetching contacts:", error);
+    }
+  };
 
   const fetchDeal = async () => {
     try {
@@ -47,6 +79,8 @@ const DealDetails = () => {
         setProbability(data.probability?.toString() || "");
         setCloseDate(data.close_date || "");
         setNotes(data.notes || "");
+        setCompanyId(data.company_id || "");
+        setContactId(data.contact_id || "");
       }
     } catch (error: any) {
       toast({
@@ -66,7 +100,9 @@ const DealDetails = () => {
         stage: stage as any,
         probability: parseInt(probability) || 0,
         close_date: closeDate || null,
-        notes,
+        notes: notes || null,
+        company_id: companyId || null,
+        contact_id: contactId || null,
         user_id: (await supabase.auth.getUser()).data.user?.id,
       };
 
@@ -176,27 +212,62 @@ const DealDetails = () => {
                   </Select>
                 </div>
 
-                <div className="grid gap-2">
-                  <Label htmlFor="probability">Probability (%)</Label>
-                  <Input
-                    id="probability"
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={probability}
-                    onChange={(e) => setProbability(e.target.value)}
-                    placeholder="0"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="probability">Probability (%)</Label>
+                    <Input
+                      id="probability"
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={probability}
+                      onChange={(e) => setProbability(e.target.value)}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="closeDate">Expected Close Date</Label>
+                    <Input
+                      id="closeDate"
+                      type="date"
+                      value={closeDate}
+                      onChange={(e) => setCloseDate(e.target.value)}
+                    />
+                  </div>
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="closeDate">Expected Close Date</Label>
-                  <Input
-                    id="closeDate"
-                    type="date"
-                    value={closeDate}
-                    onChange={(e) => setCloseDate(e.target.value)}
-                  />
+                  <Label htmlFor="company">Company</Label>
+                  <Select value={companyId} onValueChange={setCompanyId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a company" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">None</SelectItem>
+                      {companies.map((company) => (
+                        <SelectItem key={company.id} value={company.id}>
+                          {company.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="contact">Contact</Label>
+                  <Select value={contactId} onValueChange={setContactId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a contact" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">None</SelectItem>
+                      {contacts.map((contact) => (
+                        <SelectItem key={contact.id} value={contact.id}>
+                          {contact.first_name} {contact.last_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="grid gap-2">
