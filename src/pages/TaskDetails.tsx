@@ -37,9 +37,9 @@ const TaskDetails = () => {
     due_date: "",
     priority: "medium",
     status: "todo",
-    assigned_to: "",
-    related_to_type: "",
-    related_to_id: "",
+    assigned_to: "unassigned",
+    related_to_type: "none",
+    related_to_id: "none",
   });
 
   useEffect(() => {
@@ -81,9 +81,9 @@ const TaskDetails = () => {
           due_date: data.due_date ? new Date(data.due_date).toISOString().slice(0, 16) : "",
           priority: data.priority || "medium",
           status: data.status || "todo",
-          assigned_to: data.assigned_to || "",
-          related_to_type: data.related_to_type || "",
-          related_to_id: data.related_to_id || "",
+          assigned_to: data.assigned_to || "unassigned",
+          related_to_type: data.related_to_type || "none",
+          related_to_id: data.related_to_id || "none",
         });
       }
       return data;
@@ -101,9 +101,9 @@ const TaskDetails = () => {
         due_date: formData.due_date || null,
         priority: formData.priority as any,
         status: formData.status as any,
-        assigned_to: formData.assigned_to || null,
-        related_to_type: formData.related_to_type || null,
-        related_to_id: formData.related_to_id || null,
+        assigned_to: formData.assigned_to === "unassigned" ? null : formData.assigned_to,
+        related_to_type: formData.related_to_type === "none" ? null : formData.related_to_type,
+        related_to_id: formData.related_to_id === "none" ? null : formData.related_to_id,
       };
 
       const { error } = await supabase
@@ -326,7 +326,7 @@ const TaskDetails = () => {
                       <SelectValue placeholder="Select member" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="unassigned">None</SelectItem>
                       {teamMembers.map((member) => (
                         <SelectItem key={member.id} value={member.id}>
                           {member.full_name || member.email}
@@ -347,13 +347,13 @@ const TaskDetails = () => {
                   <Label htmlFor="related_type">Type</Label>
                   <Select 
                     value={formData.related_to_type} 
-                    onValueChange={(value) => setFormData({ ...formData, related_to_type: value, related_to_id: "" })}
+                    onValueChange={(value) => setFormData({ ...formData, related_to_type: value, related_to_id: "none" })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       <SelectItem value="lead">Lead</SelectItem>
                       <SelectItem value="contact">Contact</SelectItem>
                       <SelectItem value="deal">Deal</SelectItem>
@@ -361,7 +361,7 @@ const TaskDetails = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                {formData.related_to_type && (
+                {formData.related_to_type !== "none" && (
                   <div className="space-y-2">
                     <Label htmlFor="related_id">Select {formData.related_to_type}</Label>
                     <Select value={formData.related_to_id} onValueChange={(value) => setFormData({ ...formData, related_to_id: value })}>
