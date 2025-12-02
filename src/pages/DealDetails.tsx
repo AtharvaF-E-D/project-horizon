@@ -23,8 +23,8 @@ const DealDetails = () => {
   const [probability, setProbability] = useState("");
   const [closeDate, setCloseDate] = useState("");
   const [notes, setNotes] = useState("");
-  const [companyId, setCompanyId] = useState<string>("");
-  const [contactId, setContactId] = useState<string>("");
+  const [companyId, setCompanyId] = useState<string>("none");
+  const [contactId, setContactId] = useState<string>("none");
   const [companies, setCompanies] = useState<{ id: string; name: string }[]>([]);
   const [contacts, setContacts] = useState<{ id: string; first_name: string; last_name: string }[]>([]);
 
@@ -79,8 +79,8 @@ const DealDetails = () => {
         setProbability(data.probability?.toString() || "");
         setCloseDate(data.close_date || "");
         setNotes(data.notes || "");
-        setCompanyId(data.company_id || "");
-        setContactId(data.contact_id || "");
+        setCompanyId(data.company_id || "none");
+        setContactId(data.contact_id || "none");
       }
     } catch (error: any) {
       toast({
@@ -101,8 +101,8 @@ const DealDetails = () => {
         probability: parseInt(probability) || 0,
         close_date: closeDate || null,
         notes: notes || null,
-        company_id: companyId || null,
-        contact_id: contactId || null,
+        company_id: companyId === "none" ? null : companyId,
+        contact_id: contactId === "none" ? null : contactId,
         user_id: (await supabase.auth.getUser()).data.user?.id,
       };
 
@@ -243,7 +243,7 @@ const DealDetails = () => {
                       <SelectValue placeholder="Select a company" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {companies.map((company) => (
                         <SelectItem key={company.id} value={company.id}>
                           {company.name}
@@ -260,7 +260,7 @@ const DealDetails = () => {
                       <SelectValue placeholder="Select a contact" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {contacts.map((contact) => (
                         <SelectItem key={contact.id} value={contact.id}>
                           {contact.first_name} {contact.last_name}
