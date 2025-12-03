@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      campaigns: {
+        Row: {
+          campaign_type: string
+          click_count: number | null
+          content: string | null
+          created_at: string
+          id: string
+          name: string
+          open_count: number | null
+          recipient_count: number | null
+          scheduled_at: string | null
+          sent_at: string | null
+          status: string
+          subject: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          campaign_type?: string
+          click_count?: number | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          open_count?: number | null
+          recipient_count?: number | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          campaign_type?: string
+          click_count?: number | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          open_count?: number | null
+          recipient_count?: number | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           address: string | null

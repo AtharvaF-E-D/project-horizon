@@ -20,6 +20,7 @@ import AIAssistant from "./pages/AIAssistant";
 import Tasks from "./pages/Tasks";
 import TaskDetails from "./pages/TaskDetails";
 import Campaigns from "./pages/Campaigns";
+import CampaignDetails from "./pages/CampaignDetails";
 import WhatsApp from "./pages/WhatsApp";
 import Calls from "./pages/Calls";
 import Reports from "./pages/Reports";
@@ -60,6 +61,8 @@ const App = () => (
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/tasks/:id" element={<TaskDetails />} />
           <Route path="/campaigns" element={<Campaigns />} />
+          <Route path="/campaigns/:id" element={<CampaignDetails />} />
+          <Route path="/campaigns/new" element={<CampaignDetails />} />
           <Route path="/whatsapp" element={<WhatsApp />} />
           <Route path="/calls" element={<Calls />} />
           <Route path="/reports" element={<Reports />} />
