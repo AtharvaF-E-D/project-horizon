@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      activities: {
+        Row: {
+          activity_type: Database["public"]["Enums"]["activity_type"]
+          created_at: string
+          description: string | null
+          entity_id: string
+          entity_name: string | null
+          entity_type: string
+          id: string
+          metadata: Json | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          activity_type: Database["public"]["Enums"]["activity_type"]
+          created_at?: string
+          description?: string | null
+          entity_id: string
+          entity_name?: string | null
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          activity_type?: Database["public"]["Enums"]["activity_type"]
+          created_at?: string
+          description?: string | null
+          entity_id?: string
+          entity_name?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       campaigns: {
         Row: {
           campaign_type: string
@@ -420,6 +459,27 @@ export type Database = {
       }
     }
     Enums: {
+      activity_type:
+        | "lead_created"
+        | "lead_updated"
+        | "lead_status_changed"
+        | "lead_converted"
+        | "deal_created"
+        | "deal_updated"
+        | "deal_stage_changed"
+        | "deal_won"
+        | "deal_lost"
+        | "task_created"
+        | "task_completed"
+        | "task_updated"
+        | "contact_created"
+        | "contact_updated"
+        | "company_created"
+        | "company_updated"
+        | "note_added"
+        | "email_sent"
+        | "call_made"
+        | "meeting_scheduled"
       app_role: "owner" | "admin" | "manager" | "agent" | "viewer"
       deal_stage:
         | "prospecting"
@@ -571,6 +631,28 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      activity_type: [
+        "lead_created",
+        "lead_updated",
+        "lead_status_changed",
+        "lead_converted",
+        "deal_created",
+        "deal_updated",
+        "deal_stage_changed",
+        "deal_won",
+        "deal_lost",
+        "task_created",
+        "task_completed",
+        "task_updated",
+        "contact_created",
+        "contact_updated",
+        "company_created",
+        "company_updated",
+        "note_added",
+        "email_sent",
+        "call_made",
+        "meeting_scheduled",
+      ],
       app_role: ["owner", "admin", "manager", "agent", "viewer"],
       deal_stage: [
         "prospecting",

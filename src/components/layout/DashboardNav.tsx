@@ -3,23 +3,17 @@ import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
   Users,
-  Sparkles,
   TrendingUp,
-  ListTodo,
-  Mail,
   MessageCircle,
   Phone,
   BarChart3,
-  FileText,
-  Calendar,
-  ShoppingCart,
-  Settings,
   Building2,
   UserCircle,
   DollarSign,
   Bot,
   CheckSquare,
   Megaphone,
+  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +26,7 @@ const navItems = [
   { icon: Building2, label: "Companies", path: "/companies" },
   { icon: CheckSquare, label: "Tasks", path: "/tasks" },
   { icon: Megaphone, label: "Campaigns", path: "/campaigns" },
+  { icon: Activity, label: "Activity", path: "/activity" },
   { icon: MessageCircle, label: "WhatsApp", path: "/whatsapp" },
   { icon: Phone, label: "Calls", path: "/calls" },
   { icon: BarChart3, label: "Reports", path: "/reports" },
