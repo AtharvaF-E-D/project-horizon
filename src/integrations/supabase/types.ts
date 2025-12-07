@@ -66,6 +66,7 @@ export type Database = {
           id: string
           notes: string | null
           phone_number: string
+          scheduled_at: string | null
           status: Database["public"]["Enums"]["call_status"]
           user_id: string
         }
@@ -81,6 +82,7 @@ export type Database = {
           id?: string
           notes?: string | null
           phone_number: string
+          scheduled_at?: string | null
           status?: Database["public"]["Enums"]["call_status"]
           user_id: string
         }
@@ -96,6 +98,7 @@ export type Database = {
           id?: string
           notes?: string | null
           phone_number?: string
+          scheduled_at?: string | null
           status?: Database["public"]["Enums"]["call_status"]
           user_id?: string
         }
