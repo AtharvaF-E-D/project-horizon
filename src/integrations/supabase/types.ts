@@ -53,6 +53,62 @@ export type Database = {
         }
         Relationships: []
       }
+      calls: {
+        Row: {
+          ai_summary: string | null
+          call_type: Database["public"]["Enums"]["call_type"]
+          company_name: string | null
+          contact_id: string | null
+          contact_name: string | null
+          created_at: string
+          duration_seconds: number | null
+          ended_at: string | null
+          id: string
+          notes: string | null
+          phone_number: string
+          status: Database["public"]["Enums"]["call_status"]
+          user_id: string
+        }
+        Insert: {
+          ai_summary?: string | null
+          call_type?: Database["public"]["Enums"]["call_type"]
+          company_name?: string | null
+          contact_id?: string | null
+          contact_name?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          notes?: string | null
+          phone_number: string
+          status?: Database["public"]["Enums"]["call_status"]
+          user_id: string
+        }
+        Update: {
+          ai_summary?: string | null
+          call_type?: Database["public"]["Enums"]["call_type"]
+          company_name?: string | null
+          contact_id?: string | null
+          contact_name?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          notes?: string | null
+          phone_number?: string
+          status?: Database["public"]["Enums"]["call_status"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calls_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           campaign_type: string
@@ -481,6 +537,8 @@ export type Database = {
         | "call_made"
         | "meeting_scheduled"
       app_role: "owner" | "admin" | "manager" | "agent" | "viewer"
+      call_status: "completed" | "missed" | "no_answer" | "busy" | "voicemail"
+      call_type: "incoming" | "outgoing"
       deal_stage:
         | "prospecting"
         | "qualification"
@@ -654,6 +712,8 @@ export const Constants = {
         "meeting_scheduled",
       ],
       app_role: ["owner", "admin", "manager", "agent", "viewer"],
+      call_status: ["completed", "missed", "no_answer", "busy", "voicemail"],
+      call_type: ["incoming", "outgoing"],
       deal_stage: [
         "prospecting",
         "qualification",
