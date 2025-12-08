@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Calendar, Search, Filter, Clock, CheckCircle2 } from "lucide-react";
+import { Plus, Calendar, Search, Filter, Clock, CheckCircle2, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import type { Tables } from "@/integrations/supabase/types";
@@ -175,6 +175,13 @@ const Tasks = () => {
     }
   };
 
+  const isCallTask = (task: Task) => task.related_to_type === "call";
+
+  const handleCallNow = (task: Task) => {
+    // Navigate to calls page - the task title contains the phone info
+    navigate("/calls");
+  };
+
   const filteredTasks = tasks?.filter(task => 
     searchQuery === "" || 
     task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -300,10 +307,17 @@ const Tasks = () => {
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
+                            {isCallTask(task) && <Phone className="w-4 h-4 text-primary" />}
                             <h4 className="font-medium">{task.title}</h4>
                             <Badge variant="outline" className={`${getPriorityColor(task.priority)} text-white`}>
                               {task.priority}
                             </Badge>
+                            {isCallTask(task) && (
+                              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                                <Phone className="w-3 h-3 mr-1" />
+                                Scheduled Call
+                              </Badge>
+                            )}
                           </div>
                           {task.description && (
                             <p className="text-sm text-muted-foreground mb-2">{task.description}</p>
@@ -314,9 +328,25 @@ const Tasks = () => {
                               {task.due_date ? new Date(task.due_date).toLocaleDateString() : "No date"}
                             </span>
                             {task.assigned_to && <Badge variant="secondary">Assigned</Badge>}
-                            {task.related_to_type && <Badge variant="outline">{task.related_to_type}</Badge>}
+                            {task.related_to_type && task.related_to_type !== "call" && (
+                              <Badge variant="outline">{task.related_to_type}</Badge>
+                            )}
                           </div>
                         </div>
+                        {isCallTask(task) && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCallNow(task);
+                            }}
+                          >
+                            <Phone className="w-3 h-3" />
+                            Call Now
+                          </Button>
+                        )}
                       </div>
                     ))}
                   </div>

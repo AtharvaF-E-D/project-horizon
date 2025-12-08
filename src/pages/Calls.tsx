@@ -203,7 +203,7 @@ export default function Calls() {
     try {
       const scheduledAt = new Date(`${scheduleDate}T${scheduleTime}`);
       
-      const { error } = await supabase.from("calls").insert({
+      const { data: callData, error: callError } = await supabase.from("calls").insert({
         user_id: user.id,
         phone_number: dialNumber,
         contact_id: selectedContact?.id || null,
@@ -216,13 +216,34 @@ export default function Calls() {
         duration_seconds: 0,
         notes: scheduleNotes || null,
         scheduled_at: scheduledAt.toISOString(),
+      }).select().single();
+
+      if (callError) throw callError;
+
+      // Create a corresponding task for unified task management
+      const contactName = selectedContact 
+        ? `${selectedContact.first_name} ${selectedContact.last_name}` 
+        : dialNumber;
+      
+      const { error: taskError } = await supabase.from("tasks").insert({
+        user_id: user.id,
+        title: `📞 Follow-up call: ${contactName}`,
+        description: scheduleNotes || `Scheduled call to ${dialNumber}`,
+        due_date: scheduledAt.toISOString(),
+        priority: "medium" as const,
+        status: "todo" as const,
+        related_to_type: "call",
+        related_to_id: callData.id,
       });
 
-      if (error) throw error;
+      if (taskError) {
+        console.error("Error creating task:", taskError);
+        // Don't fail the whole operation if task creation fails
+      }
 
       toast({
         title: "Call scheduled",
-        description: `Reminder set for ${format(scheduledAt, "MMM d, yyyy 'at' h:mm a")}`,
+        description: `Reminder set for ${format(scheduledAt, "MMM d, yyyy 'at' h:mm a")}. Task created for tracking.`,
       });
 
       // Reset and refresh
