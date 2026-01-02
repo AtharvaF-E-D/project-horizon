@@ -205,10 +205,13 @@ const Tasks = () => {
     return acc;
   }, {} as Record<string, Task[]>);
 
+  const callTasks = filteredTasks.filter(t => t.related_to_type === "call" && t.status !== "completed");
+
   const stats = [
     { label: "Active Tasks", value: activeTasks.length, icon: Clock, color: "text-primary" },
     { label: "Completed", value: completedTasks.length, icon: CheckCircle2, color: "text-green-500" },
     { label: "High Priority", value: tasks?.filter(t => t.priority === "high" && t.status !== "completed").length || 0, icon: Calendar, color: "text-red-500" },
+    { label: "Scheduled Calls", value: callTasks.length, icon: Phone, color: "text-blue-500" },
   ];
 
   return (
@@ -222,7 +225,7 @@ const Tasks = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, index) => (
             <Card key={index} className="border-2 border-primary/20 card-hover animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
               <CardContent className="p-6">
