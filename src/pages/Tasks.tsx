@@ -29,6 +29,7 @@ const Tasks = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [teamMembers, setTeamMembers] = useState<Profile[]>([]);
   const [leads, setLeads] = useState<any[]>([]);
@@ -182,11 +183,17 @@ const Tasks = () => {
     navigate("/calls");
   };
 
-  const filteredTasks = tasks?.filter(task => 
-    searchQuery === "" || 
-    task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    task.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
+  const filteredTasks = tasks?.filter(task => {
+    const matchesSearch = searchQuery === "" || 
+      task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      task.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesType = typeFilter === "all" || 
+      (typeFilter === "calls" && task.related_to_type === "call") ||
+      (typeFilter === "other" && task.related_to_type !== "call");
+    
+    return matchesSearch && matchesType;
+  }) || [];
 
   const activeTasks = filteredTasks.filter(t => t.status !== "completed");
   const completedTasks = filteredTasks.filter(t => t.status === "completed");
@@ -264,6 +271,21 @@ const Tasks = () => {
               <SelectItem value="high">High</SelectItem>
               <SelectItem value="medium">Medium</SelectItem>
               <SelectItem value="low">Low</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="calls">
+                <span className="flex items-center gap-2">
+                  <Phone className="w-3 h-3" />
+                  Call Tasks
+                </span>
+              </SelectItem>
+              <SelectItem value="other">Other Tasks</SelectItem>
             </SelectContent>
           </Select>
           <Button onClick={() => setIsOpen(true)} className="gradient-primary text-white">
