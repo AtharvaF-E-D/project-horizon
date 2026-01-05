@@ -26,6 +26,8 @@ const navItems = [
   { icon: Building2, label: "Companies", path: "/companies" },
   { icon: CheckSquare, label: "Tasks", path: "/tasks" },
   { icon: Megaphone, label: "Campaigns", path: "/campaigns" },
+  { icon: Users, label: "Subscribers", path: "/subscribers" },
+  { icon: BarChart3, label: "Templates", path: "/email-templates" },
   { icon: Activity, label: "Activity", path: "/activity" },
   { icon: MessageCircle, label: "WhatsApp", path: "/whatsapp" },
   { icon: Phone, label: "Calls", path: "/calls" },
