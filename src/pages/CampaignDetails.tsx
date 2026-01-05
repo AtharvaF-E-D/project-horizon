@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -30,87 +32,27 @@ import {
   Eye,
   MousePointer,
   Users,
+  Star,
+  CheckCircle2,
 } from "lucide-react";
 
-const emailTemplates = [
-  {
-    id: "welcome",
-    name: "Welcome Email",
-    subject: "Welcome to {{company_name}}!",
-    content: `Hi {{first_name}},
+interface EmailTemplate {
+  id: string;
+  name: string;
+  subject: string;
+  content: string;
+  category: string | null;
+  is_default: boolean | null;
+}
 
-Welcome to {{company_name}}! We're excited to have you on board.
-
-Here's what you can expect:
-- Regular updates about our products
-- Exclusive offers and discounts
-- Tips and resources to help you succeed
-
-If you have any questions, feel free to reach out.
-
-Best regards,
-The {{company_name}} Team`,
-  },
-  {
-    id: "follow-up",
-    name: "Follow-up",
-    subject: "Following up on our conversation",
-    content: `Hi {{first_name}},
-
-I wanted to follow up on our recent conversation about {{topic}}.
-
-Have you had a chance to review the information I sent? I'd love to answer any questions you might have.
-
-Let me know if you'd like to schedule a call to discuss further.
-
-Best,
-{{sender_name}}`,
-  },
-  {
-    id: "promotion",
-    name: "Promotional",
-    subject: "Special Offer Just for You!",
-    content: `Hi {{first_name}},
-
-We have an exclusive offer just for you!
-
-For a limited time, get {{discount}}% off on all our products.
-
-Use code: {{promo_code}}
-
-Don't miss out - this offer expires on {{expiry_date}}.
-
-Shop now!
-
-Best,
-The {{company_name}} Team`,
-  },
-  {
-    id: "newsletter",
-    name: "Newsletter",
-    subject: "{{company_name}} Monthly Update",
-    content: `Hi {{first_name}},
-
-Here's your monthly update from {{company_name}}:
-
-📰 News & Updates
-- [Update 1]
-- [Update 2]
-
-💡 Tips & Resources
-- [Tip 1]
-- [Tip 2]
-
-🎯 Upcoming Events
-- [Event 1]
-- [Event 2]
-
-Stay tuned for more updates!
-
-Best,
-The {{company_name}} Team`,
-  },
-];
+interface Subscriber {
+  id: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  status: string;
+  tags: string[];
+}
 
 const CampaignDetails = () => {
   const { id } = useParams();
@@ -126,12 +68,38 @@ const CampaignDetails = () => {
   const [recipientCount, setRecipientCount] = useState(0);
   const [openCount, setOpenCount] = useState(0);
   const [clickCount, setClickCount] = useState(0);
+  
+  // Templates and subscribers
+  const [templates, setTemplates] = useState<EmailTemplate[]>([]);
+  const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
+  const [selectedSubscribers, setSelectedSubscribers] = useState<string[]>([]);
+  const [subscriberFilter, setSubscriberFilter] = useState("");
+  const [tagFilter, setTagFilter] = useState("all");
 
   useEffect(() => {
+    fetchTemplates();
+    fetchSubscribers();
     if (id && id !== "new") {
       fetchCampaign();
     }
   }, [id]);
+
+  const fetchTemplates = async () => {
+    const { data } = await supabase
+      .from("email_templates")
+      .select("*")
+      .order("is_default", { ascending: false });
+    setTemplates(data || []);
+  };
+
+  const fetchSubscribers = async () => {
+    const { data } = await supabase
+      .from("subscribers")
+      .select("*")
+      .eq("status", "active")
+      .order("created_at", { ascending: false });
+    setSubscribers(data || []);
+  };
 
   const fetchCampaign = async () => {
     try {
@@ -175,6 +143,12 @@ const CampaignDetails = () => {
 
     setLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/auth");
+        return;
+      }
+
       const campaignData = {
         name,
         subject: subject || null,
@@ -182,7 +156,8 @@ const CampaignDetails = () => {
         campaign_type: campaignType,
         status: newStatus || status,
         scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null,
-        user_id: (await supabase.auth.getUser()).data.user?.id,
+        recipient_count: selectedSubscribers.length || recipientCount,
+        user_id: user.id,
       };
 
       if (id === "new") {
@@ -230,30 +205,44 @@ const CampaignDetails = () => {
     }
   };
 
-  const applyTemplate = (templateId: string) => {
-    const template = emailTemplates.find((t) => t.id === templateId);
-    if (template) {
-      setSubject(template.subject);
-      setContent(template.content);
-      toast({
-        title: "Template Applied",
-        description: `"${template.name}" template has been applied`,
-      });
+  const applyTemplate = (template: EmailTemplate) => {
+    setSubject(template.subject);
+    setContent(template.content);
+    toast({
+      title: "Template Applied",
+      description: `"${template.name}" template has been applied`,
+    });
+  };
+
+  const toggleSubscriber = (subscriberId: string) => {
+    setSelectedSubscribers(prev => 
+      prev.includes(subscriberId) 
+        ? prev.filter(id => id !== subscriberId)
+        : [...prev, subscriberId]
+    );
+  };
+
+  const selectAllSubscribers = () => {
+    const filtered = filteredSubscribers;
+    const allSelected = filtered.every(s => selectedSubscribers.includes(s.id));
+    if (allSelected) {
+      setSelectedSubscribers(prev => prev.filter(id => !filtered.some(s => s.id === id)));
+    } else {
+      setSelectedSubscribers(prev => [...new Set([...prev, ...filtered.map(s => s.id)])]);
     }
   };
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case "email":
-        return <Mail className="w-4 h-4" />;
-      case "sms":
-        return <MessageSquare className="w-4 h-4" />;
-      case "whatsapp":
-        return <Phone className="w-4 h-4" />;
-      default:
-        return <Mail className="w-4 h-4" />;
-    }
-  };
+  // Get all unique tags
+  const allTags = [...new Set(subscribers.flatMap(s => s.tags || []))];
+
+  const filteredSubscribers = subscribers.filter(sub => {
+    const matchesSearch = 
+      sub.email.toLowerCase().includes(subscriberFilter.toLowerCase()) ||
+      (sub.first_name?.toLowerCase().includes(subscriberFilter.toLowerCase())) ||
+      (sub.last_name?.toLowerCase().includes(subscriberFilter.toLowerCase()));
+    const matchesTag = tagFilter === "all" || sub.tags?.includes(tagFilter);
+    return matchesSearch && matchesTag;
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -318,6 +307,14 @@ const CampaignDetails = () => {
               <TabsList>
                 <TabsTrigger value="content">Content</TabsTrigger>
                 <TabsTrigger value="templates">Templates</TabsTrigger>
+                <TabsTrigger value="recipients">
+                  Recipients
+                  {selectedSubscribers.length > 0 && (
+                    <Badge variant="secondary" className="ml-2">
+                      {selectedSubscribers.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
                 <TabsTrigger value="settings">Settings</TabsTrigger>
               </TabsList>
 
@@ -400,7 +397,7 @@ const CampaignDetails = () => {
                       className="font-mono text-sm"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Use {"{{first_name}}"}, {"{{company_name}}"}, etc. for personalization
+                      Use {"{{first_name}}"}, {"{{last_name}}"}, {"{{email}}"} for personalization
                     </p>
                   </div>
 
@@ -413,30 +410,143 @@ const CampaignDetails = () => {
                       )}
                       Save as Draft
                     </Button>
+                    {selectedSubscribers.length > 0 && (
+                      <Button 
+                        variant="default" 
+                        onClick={() => handleSave("sent")} 
+                        disabled={loading}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <Send className="h-4 w-4 mr-2" />
+                        Send to {selectedSubscribers.length} recipients
+                      </Button>
+                    )}
                   </div>
                 </Card>
               </TabsContent>
 
               <TabsContent value="templates">
                 <Card className="p-6">
-                  <h3 className="font-semibold mb-4">Email Templates</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    {emailTemplates.map((template) => (
-                      <Card
-                        key={template.id}
-                        className="p-4 cursor-pointer hover:border-primary transition-colors"
-                        onClick={() => applyTemplate(template.id)}
-                      >
-                        <div className="flex items-center gap-2 mb-2">
-                          <Mail className="w-4 h-4 text-primary" />
-                          <h4 className="font-medium">{template.name}</h4>
-                        </div>
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {template.subject}
-                        </p>
-                      </Card>
-                    ))}
+                  <h3 className="font-semibold mb-4">Your Email Templates</h3>
+                  {templates.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No templates yet</p>
+                      <Button variant="link" onClick={() => navigate("/email-templates")}>
+                        Create your first template
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-4">
+                      {templates.map((template) => (
+                        <Card
+                          key={template.id}
+                          className="p-4 cursor-pointer hover:border-primary transition-colors"
+                          onClick={() => applyTemplate(template)}
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <Mail className="w-4 h-4 text-primary" />
+                            <h4 className="font-medium">{template.name}</h4>
+                            {template.is_default && (
+                              <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                            )}
+                          </div>
+                          <Badge variant="outline" className="mb-2">{template.category}</Badge>
+                          <p className="text-sm text-muted-foreground line-clamp-2">
+                            {template.subject}
+                          </p>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="recipients">
+                <Card className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-semibold">Select Recipients</h3>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">
+                        {selectedSubscribers.length} selected
+                      </Badge>
+                      <Button variant="outline" size="sm" onClick={selectAllSubscribers}>
+                        {filteredSubscribers.every(s => selectedSubscribers.includes(s.id)) 
+                          ? "Deselect All" 
+                          : "Select All"
+                        }
+                      </Button>
+                    </div>
                   </div>
+
+                  <div className="flex gap-4 mb-4">
+                    <Input
+                      placeholder="Search subscribers..."
+                      value={subscriberFilter}
+                      onChange={(e) => setSubscriberFilter(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Select value={tagFilter} onValueChange={setTagFilter}>
+                      <SelectTrigger className="w-48">
+                        <SelectValue placeholder="Filter by tag" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Tags</SelectItem>
+                        {allTags.map((tag) => (
+                          <SelectItem key={tag} value={tag}>{tag}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {subscribers.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No active subscribers</p>
+                      <Button variant="link" onClick={() => navigate("/subscribers")}>
+                        Add subscribers
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                      {filteredSubscribers.map((subscriber) => (
+                        <div
+                          key={subscriber.id}
+                          className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                            selectedSubscribers.includes(subscriber.id)
+                              ? "border-primary bg-primary/5"
+                              : "hover:bg-muted/50"
+                          }`}
+                          onClick={() => toggleSubscriber(subscriber.id)}
+                        >
+                          <Checkbox
+                            checked={selectedSubscribers.includes(subscriber.id)}
+                            onCheckedChange={() => toggleSubscriber(subscriber.id)}
+                          />
+                          <div className="flex-1">
+                            <div className="font-medium">
+                              {subscriber.first_name || subscriber.last_name
+                                ? `${subscriber.first_name || ""} ${subscriber.last_name || ""}`.trim()
+                                : subscriber.email}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {subscriber.email}
+                            </div>
+                          </div>
+                          <div className="flex gap-1">
+                            {subscriber.tags?.slice(0, 2).map((tag, i) => (
+                              <Badge key={i} variant="outline" className="text-xs">
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                          {selectedSubscribers.includes(subscriber.id) && (
+                            <CheckCircle2 className="w-5 h-5 text-primary" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </Card>
               </TabsContent>
 
@@ -456,15 +566,17 @@ const CampaignDetails = () => {
                   </div>
 
                   <div className="pt-4 border-t">
-                    <h4 className="font-medium mb-2">Recipient Selection</h4>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Recipients will be selected from your contacts and leads based on filters.
-                      This feature will be available in a future update.
-                    </p>
-                    <Button variant="outline" disabled>
-                      <Users className="w-4 h-4 mr-2" />
-                      Select Recipients
-                    </Button>
+                    <h4 className="font-medium mb-2">Campaign Summary</h4>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="p-3 bg-muted/50 rounded-lg">
+                        <div className="text-muted-foreground">Recipients</div>
+                        <div className="text-xl font-bold">{selectedSubscribers.length || recipientCount}</div>
+                      </div>
+                      <div className="p-3 bg-muted/50 rounded-lg">
+                        <div className="text-muted-foreground">Status</div>
+                        <div className="text-xl font-bold capitalize">{status}</div>
+                      </div>
+                    </div>
                   </div>
                 </Card>
               </TabsContent>
