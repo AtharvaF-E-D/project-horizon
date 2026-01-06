@@ -16,6 +16,8 @@ import {
   Activity,
   Mail,
   PieChart,
+  Filter,
+  Workflow,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +31,8 @@ const navItems = [
   { icon: CheckSquare, label: "Tasks", path: "/tasks" },
   { icon: Megaphone, label: "Campaigns", path: "/campaigns" },
   { icon: PieChart, label: "Email Analytics", path: "/campaign-analytics" },
+  { icon: Filter, label: "Segments", path: "/segments" },
+  { icon: Workflow, label: "Sequences", path: "/sequences" },
   { icon: Users, label: "Subscribers", path: "/subscribers" },
   { icon: Mail, label: "Templates", path: "/email-templates" },
   { icon: Activity, label: "Activity", path: "/activity" },
