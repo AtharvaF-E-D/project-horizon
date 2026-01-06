@@ -94,7 +94,7 @@ const Analytics = () => {
       <DashboardNavbar />
       <div className="flex">
         <DashboardNav />
-        <main className="flex-1 p-8 ml-64">
+        <main className="flex-1 p-8 ml-64 pt-20">
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2">Analytics Dashboard</h1>
             <p className="text-muted-foreground">Track your sales performance</p>

@@ -139,7 +139,7 @@ const Tasks = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <DashboardNavbar />
       <DashboardNav />
-      <main className="ml-64 pt-16 p-8">
+      <main className="ml-64 pt-20 p-8">
         <div className="mb-8 animate-fade-in">
           <h1 className="text-3xl font-bold mb-2">Tasks & Reminders</h1>
           <p className="text-muted-foreground">Manage your tasks and stay organized</p>

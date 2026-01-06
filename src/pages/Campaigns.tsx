@@ -39,7 +39,7 @@ export default function Campaigns() {
       <DashboardNavbar />
       <DashboardNav />
       
-      <main className="ml-64 mt-16 p-8">
+      <main className="ml-64 pt-20 p-8">
         <div className="max-w-7xl mx-auto space-y-8">
           {/* Header */}
           <div className="flex justify-between items-start">

@@ -62,7 +62,7 @@ const AIAssistant = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <DashboardNavbar />
       <DashboardNav />
-      <main className="ml-64 pt-16 p-8">
+      <main className="ml-64 pt-20 p-8">
         <div className="max-w-6xl mx-auto">
           <div className="mb-8 animate-fade-in">
             <div className="flex items-center gap-3 mb-3">

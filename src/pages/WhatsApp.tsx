@@ -50,8 +50,8 @@ export default function WhatsApp() {
     <div className="min-h-screen bg-background">
       <DashboardNavbar />
       <DashboardNav />
-      
-      <main className="ml-64 mt-16 p-8">
+
+      <main className="ml-64 pt-10 p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-6">
