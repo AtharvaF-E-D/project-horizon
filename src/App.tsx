@@ -18,7 +18,14 @@ import CompanyDetails from "./pages/CompanyDetails";
 import Analytics from "./pages/Analytics";
 import AIAssistant from "./pages/AIAssistant";
 import Tasks from "./pages/Tasks";
+import TaskDetails from "./pages/TaskDetails";
 import Campaigns from "./pages/Campaigns";
+import CampaignDetails from "./pages/CampaignDetails";
+import CampaignAnalytics from "./pages/CampaignAnalytics";
+import Segments from "./pages/Segments";
+import EmailSequences from "./pages/EmailSequences";
+import Subscribers from "./pages/Subscribers";
+import EmailTemplates from "./pages/EmailTemplates";
 import WhatsApp from "./pages/WhatsApp";
 import Calls from "./pages/Calls";
 import Reports from "./pages/Reports";
@@ -27,6 +34,7 @@ import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import Team from "./pages/Team";
 import Notifications from "./pages/Notifications";
+import ActivityTimeline from "./pages/ActivityTimeline";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -57,7 +65,15 @@ const App = () => (
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/ai-assistant" element={<AIAssistant />} />
           <Route path="/tasks" element={<Tasks />} />
+          <Route path="/tasks/:id" element={<TaskDetails />} />
           <Route path="/campaigns" element={<Campaigns />} />
+          <Route path="/campaigns/:id" element={<CampaignDetails />} />
+          <Route path="/campaigns/new" element={<CampaignDetails />} />
+          <Route path="/campaign-analytics" element={<CampaignAnalytics />} />
+          <Route path="/segments" element={<Segments />} />
+          <Route path="/sequences" element={<EmailSequences />} />
+          <Route path="/subscribers" element={<Subscribers />} />
+          <Route path="/email-templates" element={<EmailTemplates />} />
           <Route path="/whatsapp" element={<WhatsApp />} />
           <Route path="/calls" element={<Calls />} />
           <Route path="/reports" element={<Reports />} />
@@ -65,6 +81,7 @@ const App = () => (
           <Route path="/profile" element={<Profile />} />
           <Route path="/team" element={<Team />} />
           <Route path="/notifications" element={<Notifications />} />
+          <Route path="/activity" element={<ActivityTimeline />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

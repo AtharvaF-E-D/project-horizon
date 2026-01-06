@@ -14,6 +14,197 @@ export type Database = {
   }
   public: {
     Tables: {
+      activities: {
+        Row: {
+          activity_type: Database["public"]["Enums"]["activity_type"]
+          created_at: string
+          description: string | null
+          entity_id: string
+          entity_name: string | null
+          entity_type: string
+          id: string
+          metadata: Json | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          activity_type: Database["public"]["Enums"]["activity_type"]
+          created_at?: string
+          description?: string | null
+          entity_id: string
+          entity_name?: string | null
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          activity_type?: Database["public"]["Enums"]["activity_type"]
+          created_at?: string
+          description?: string | null
+          entity_id?: string
+          entity_name?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      calls: {
+        Row: {
+          ai_summary: string | null
+          call_type: Database["public"]["Enums"]["call_type"]
+          company_name: string | null
+          contact_id: string | null
+          contact_name: string | null
+          created_at: string
+          duration_seconds: number | null
+          ended_at: string | null
+          id: string
+          notes: string | null
+          phone_number: string
+          scheduled_at: string | null
+          status: Database["public"]["Enums"]["call_status"]
+          user_id: string
+        }
+        Insert: {
+          ai_summary?: string | null
+          call_type?: Database["public"]["Enums"]["call_type"]
+          company_name?: string | null
+          contact_id?: string | null
+          contact_name?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          notes?: string | null
+          phone_number: string
+          scheduled_at?: string | null
+          status?: Database["public"]["Enums"]["call_status"]
+          user_id: string
+        }
+        Update: {
+          ai_summary?: string | null
+          call_type?: Database["public"]["Enums"]["call_type"]
+          company_name?: string | null
+          contact_id?: string | null
+          contact_name?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          notes?: string | null
+          phone_number?: string
+          scheduled_at?: string | null
+          status?: Database["public"]["Enums"]["call_status"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calls_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_analytics: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json | null
+          subscriber_id: string | null
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          subscriber_id?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          subscriber_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_analytics_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_analytics_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "subscribers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          campaign_type: string
+          click_count: number | null
+          content: string | null
+          created_at: string
+          id: string
+          name: string
+          open_count: number | null
+          recipient_count: number | null
+          scheduled_at: string | null
+          sent_at: string | null
+          status: string
+          subject: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          campaign_type?: string
+          click_count?: number | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          open_count?: number | null
+          recipient_count?: number | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          campaign_type?: string
+          click_count?: number | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          open_count?: number | null
+          recipient_count?: number | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           address: string | null
@@ -169,6 +360,78 @@ export type Database = {
           },
         ]
       }
+      email_sequences: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          status: string
+          trigger_type: string
+          trigger_value: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          status?: string
+          trigger_type?: string
+          trigger_value?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          status?: string
+          trigger_type?: string
+          trigger_value?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      email_templates: {
+        Row: {
+          category: string | null
+          content: string
+          created_at: string
+          id: string
+          is_default: boolean | null
+          name: string
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          name: string
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           company: string | null
@@ -289,6 +552,176 @@ export type Database = {
         }
         Relationships: []
       }
+      segments: {
+        Row: {
+          conditions: Json
+          created_at: string
+          description: string | null
+          id: string
+          match_type: string
+          name: string
+          subscriber_count: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          conditions?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          match_type?: string
+          name: string
+          subscriber_count?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          conditions?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          match_type?: string
+          name?: string
+          subscriber_count?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sequence_enrollments: {
+        Row: {
+          completed_at: string | null
+          current_step: number
+          enrolled_at: string
+          id: string
+          next_send_at: string | null
+          sequence_id: string
+          status: string
+          subscriber_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          current_step?: number
+          enrolled_at?: string
+          id?: string
+          next_send_at?: string | null
+          sequence_id: string
+          status?: string
+          subscriber_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          current_step?: number
+          enrolled_at?: string
+          id?: string
+          next_send_at?: string | null
+          sequence_id?: string
+          status?: string
+          subscriber_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sequence_enrollments_sequence_id_fkey"
+            columns: ["sequence_id"]
+            isOneToOne: false
+            referencedRelation: "email_sequences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sequence_enrollments_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "subscribers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sequence_steps: {
+        Row: {
+          content: string
+          created_at: string
+          delay_days: number
+          delay_hours: number
+          id: string
+          sequence_id: string
+          step_order: number
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          delay_days?: number
+          delay_hours?: number
+          id?: string
+          sequence_id: string
+          step_order?: number
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          delay_days?: number
+          delay_hours?: number
+          id?: string
+          sequence_id?: string
+          step_order?: number
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sequence_steps_sequence_id_fkey"
+            columns: ["sequence_id"]
+            isOneToOne: false
+            referencedRelation: "email_sequences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          status: string
+          subscribed_at: string
+          tags: string[] | null
+          unsubscribed_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          status?: string
+          subscribed_at?: string
+          tags?: string[] | null
+          unsubscribed_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          status?: string
+          subscribed_at?: string
+          tags?: string[] | null
+          unsubscribed_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           assigned_to: string | null
@@ -369,7 +802,30 @@ export type Database = {
       }
     }
     Enums: {
+      activity_type:
+        | "lead_created"
+        | "lead_updated"
+        | "lead_status_changed"
+        | "lead_converted"
+        | "deal_created"
+        | "deal_updated"
+        | "deal_stage_changed"
+        | "deal_won"
+        | "deal_lost"
+        | "task_created"
+        | "task_completed"
+        | "task_updated"
+        | "contact_created"
+        | "contact_updated"
+        | "company_created"
+        | "company_updated"
+        | "note_added"
+        | "email_sent"
+        | "call_made"
+        | "meeting_scheduled"
       app_role: "owner" | "admin" | "manager" | "agent" | "viewer"
+      call_status: "completed" | "missed" | "no_answer" | "busy" | "voicemail"
+      call_type: "incoming" | "outgoing"
       deal_stage:
         | "prospecting"
         | "qualification"
@@ -520,7 +976,31 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      activity_type: [
+        "lead_created",
+        "lead_updated",
+        "lead_status_changed",
+        "lead_converted",
+        "deal_created",
+        "deal_updated",
+        "deal_stage_changed",
+        "deal_won",
+        "deal_lost",
+        "task_created",
+        "task_completed",
+        "task_updated",
+        "contact_created",
+        "contact_updated",
+        "company_created",
+        "company_updated",
+        "note_added",
+        "email_sent",
+        "call_made",
+        "meeting_scheduled",
+      ],
       app_role: ["owner", "admin", "manager", "agent", "viewer"],
+      call_status: ["completed", "missed", "no_answer", "busy", "voicemail"],
+      call_type: ["incoming", "outgoing"],
       deal_stage: [
         "prospecting",
         "qualification",

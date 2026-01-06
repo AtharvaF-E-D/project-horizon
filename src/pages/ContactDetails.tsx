@@ -23,7 +23,7 @@ const ContactDetails = () => {
   const [phone, setPhone] = useState("");
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
-  const [companyId, setCompanyId] = useState<string>("");
+  const [companyId, setCompanyId] = useState<string>("none");
   const [companies, setCompanies] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
@@ -63,7 +63,7 @@ const ContactDetails = () => {
         setPhone(data.phone || "");
         setTitle(data.title || "");
         setNotes(data.notes || "");
-        setCompanyId(data.company_id || "");
+        setCompanyId(data.company_id || "none");
       }
     } catch (error: any) {
       toast({
@@ -84,7 +84,7 @@ const ContactDetails = () => {
         phone: phone || null,
         title: title || null,
         notes: notes || null,
-        company_id: companyId || null,
+        company_id: companyId === "none" ? null : companyId,
         user_id: (await supabase.auth.getUser()).data.user?.id,
       };
 
@@ -215,7 +215,7 @@ const ContactDetails = () => {
                       <SelectValue placeholder="Select a company" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {companies.map((company) => (
                         <SelectItem key={company.id} value={company.id}>
                           {company.name}
