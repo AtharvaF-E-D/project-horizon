@@ -21,6 +21,7 @@ import Tasks from "./pages/Tasks";
 import TaskDetails from "./pages/TaskDetails";
 import Campaigns from "./pages/Campaigns";
 import CampaignDetails from "./pages/CampaignDetails";
+import CampaignAnalytics from "./pages/CampaignAnalytics";
 import Subscribers from "./pages/Subscribers";
 import EmailTemplates from "./pages/EmailTemplates";
 import WhatsApp from "./pages/WhatsApp";
@@ -66,6 +67,7 @@ const App = () => (
           <Route path="/campaigns" element={<Campaigns />} />
           <Route path="/campaigns/:id" element={<CampaignDetails />} />
           <Route path="/campaigns/new" element={<CampaignDetails />} />
+          <Route path="/campaign-analytics" element={<CampaignAnalytics />} />
           <Route path="/subscribers" element={<Subscribers />} />
           <Route path="/email-templates" element={<EmailTemplates />} />
           <Route path="/whatsapp" element={<WhatsApp />} />
