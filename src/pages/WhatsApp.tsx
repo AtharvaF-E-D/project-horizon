@@ -192,7 +192,7 @@ export default function WhatsApp() {
       <DashboardNavbar />
       <DashboardNav />
 
-      <main className="ml-64 pt-10 p-8">
+      <main className="ml-64 pt-20 p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-6 flex justify-between items-start">
