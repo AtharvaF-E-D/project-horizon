@@ -18,6 +18,7 @@ import {
   PieChart,
   Filter,
   Workflow,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +42,7 @@ const navItems = [
   { icon: BarChart3, label: "Reports", path: "/reports" },
   { icon: BarChart3, label: "Analytics", path: "/analytics" },
   { icon: Bot, label: "AI Assistant", path: "/ai-assistant" },
+  { icon: Shield, label: "Roles", path: "/roles" },
 ];
 
 export const DashboardNav = () => {
