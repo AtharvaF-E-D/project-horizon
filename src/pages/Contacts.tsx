@@ -9,6 +9,7 @@ import { Plus, Search, Mail, Phone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { PermissionGate } from "@/components/common/PermissionGate";
 
 interface Contact {
   id: string;
@@ -70,10 +71,12 @@ const Contacts = () => {
               <h1 className="text-3xl font-bold mb-2">Contacts</h1>
               <p className="text-muted-foreground">Manage your business contacts</p>
             </div>
-            <Button onClick={() => navigate("/contacts/new")}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Contact
-            </Button>
+            <PermissionGate permission="canDeleteRecords">
+              <Button onClick={() => navigate("/contacts/new")}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Contact
+              </Button>
+            </PermissionGate>
           </div>
 
           <Card className="p-6">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { getPermissions, RolePermissions } from "@/config/permissions";
 import type { Database } from "@/integrations/supabase/types";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
@@ -9,11 +10,13 @@ export const useUserRole = () => {
   const { user } = useAuth();
   const [role, setRole] = useState<AppRole | null>(null);
   const [loading, setLoading] = useState(true);
+  const [permissions, setPermissions] = useState<RolePermissions>(getPermissions(null));
 
   useEffect(() => {
     const fetchRole = async () => {
       if (!user) {
         setRole(null);
+        setPermissions(getPermissions(null));
         setLoading(false);
         return;
       }
@@ -27,8 +30,11 @@ export const useUserRole = () => {
       if (error) {
         console.error("Error fetching user role:", error);
         setRole(null);
+        setPermissions(getPermissions(null));
       } else {
-        setRole(data?.role || null);
+        const userRole = data?.role || null;
+        setRole(userRole);
+        setPermissions(getPermissions(userRole));
       }
       setLoading(false);
     };
@@ -41,5 +47,5 @@ export const useUserRole = () => {
   const isManager = role === "manager" || isAdmin;
   const canManageRoles = isAdmin;
 
-  return { role, loading, isOwner, isAdmin, isManager, canManageRoles };
+  return { role, loading, isOwner, isAdmin, isManager, canManageRoles, permissions };
 };

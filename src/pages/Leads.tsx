@@ -10,13 +10,15 @@ import { DashboardNavbar } from "@/components/layout/DashboardNavbar";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Plus, Mail, Phone, Building, TrendingUp, Users, Target } from "lucide-react";
+import { PermissionGate } from "@/components/common/PermissionGate";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const Leads = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sourceFilter, setSourceFilter] = useState<string>("all");
-
+  const { permissions } = useUserRole();
   const { data: leads, isLoading } = useQuery({
     queryKey: ["leads", statusFilter, sourceFilter],
     queryFn: async () => {
@@ -79,10 +81,12 @@ const Leads = () => {
               <h1 className="text-3xl font-bold">Leads</h1>
               <p className="text-muted-foreground">Manage and track your sales leads</p>
             </div>
-            <Button onClick={() => navigate("/leads/new")} className="gap-2">
-              <Plus className="w-4 h-4" />
-              Add Lead
-            </Button>
+            <PermissionGate permission="canDeleteRecords">
+              <Button onClick={() => navigate("/leads/new")} className="gap-2">
+                <Plus className="w-4 h-4" />
+                Add Lead
+              </Button>
+            </PermissionGate>
           </div>
 
           {/* Stats */}

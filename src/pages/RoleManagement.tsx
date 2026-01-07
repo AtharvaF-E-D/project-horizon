@@ -55,7 +55,7 @@ const getRoleIcon = (role: AppRole) => {
 const RoleManagement = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { canManageRoles, isOwner, loading: roleLoading } = useUserRole();
+  const { canManageRoles, isOwner, loading: roleLoading, permissions } = useUserRole();
   const { toast } = useToast();
 
   const [users, setUsers] = useState<UserWithRole[]>([]);
@@ -70,7 +70,7 @@ const RoleManagement = () => {
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
-    if (!roleLoading && !canManageRoles && user) {
+    if (!roleLoading && !permissions.roles && user) {
       toast({
         title: "Access Denied",
         description: "You don't have permission to access this page.",
@@ -78,7 +78,7 @@ const RoleManagement = () => {
       });
       navigate("/dashboard");
     }
-  }, [canManageRoles, roleLoading, user, navigate, toast]);
+  }, [permissions.roles, roleLoading, user, navigate, toast]);
 
   useEffect(() => {
     if (canManageRoles) {

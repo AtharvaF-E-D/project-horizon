@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button";
-import { Bell, Settings, User, LogOut, Sparkles } from "lucide-react";
+import { Bell, Settings, User, LogOut, Sparkles, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserRole } from "@/hooks/useUserRole";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +15,7 @@ import {
 
 export const DashboardNavbar = () => {
   const { user, signOut } = useAuth();
+  const { role, permissions } = useUserRole();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -35,12 +38,17 @@ export const DashboardNavbar = () => {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" className="flex items-center gap-2">
                 <Avatar className="h-8 w-8">
                   <AvatarFallback>
                     {user?.email?.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
+                {role && (
+                  <Badge variant="outline" className="text-xs capitalize">
+                    {role}
+                  </Badge>
+                )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -50,18 +58,22 @@ export const DashboardNavbar = () => {
                   Profile
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/settings" className="cursor-pointer">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/team" className="cursor-pointer">
-                  <User className="mr-2 h-4 w-4" />
-                  Team
-                </Link>
-              </DropdownMenuItem>
+              {permissions.settings && (
+                <DropdownMenuItem asChild>
+                  <Link to="/settings" className="cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </Link>
+                </DropdownMenuItem>
+              )}
+              {permissions.team && (
+                <DropdownMenuItem asChild>
+                  <Link to="/team" className="cursor-pointer">
+                    <Users className="mr-2 h-4 w-4" />
+                    Team
+                  </Link>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={signOut} className="cursor-pointer">
                 <LogOut className="mr-2 h-4 w-4" />

@@ -9,6 +9,7 @@ import { Plus, Search, DollarSign, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { PermissionGate } from "@/components/common/PermissionGate";
 
 interface Deal {
   id: string;
@@ -85,10 +86,12 @@ const Deals = () => {
               <h1 className="text-3xl font-bold mb-2">Deals</h1>
               <p className="text-muted-foreground">Manage your sales opportunities</p>
             </div>
-            <Button onClick={() => navigate("/deals/new")}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Deal
-            </Button>
+            <PermissionGate permission="canDeleteRecords">
+              <Button onClick={() => navigate("/deals/new")}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Deal
+              </Button>
+            </PermissionGate>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
