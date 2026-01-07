@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Calendar, Search, Filter, Clock, CheckCircle2, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { PermissionGate } from "@/components/common/PermissionGate";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Task = Tables<"tasks">;
@@ -291,10 +292,12 @@ const Tasks = () => {
               <SelectItem value="other">Other Tasks</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={() => setIsOpen(true)} className="gradient-primary text-white">
-            <Plus className="w-4 h-4 mr-2" />
-            New Task
-          </Button>
+          <PermissionGate permission="canDeleteRecords">
+            <Button onClick={() => setIsOpen(true)} className="gradient-primary text-white">
+              <Plus className="w-4 h-4 mr-2" />
+              New Task
+            </Button>
+          </PermissionGate>
         </div>
 
         {/* Tabs */}

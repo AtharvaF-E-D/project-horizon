@@ -9,6 +9,7 @@ import { Plus, Search, Building2, Globe, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { PermissionGate } from "@/components/common/PermissionGate";
 
 interface Company {
   id: string;
@@ -63,10 +64,12 @@ const Companies = () => {
               <h1 className="text-3xl font-bold mb-2">Companies</h1>
               <p className="text-muted-foreground">Manage your company accounts</p>
             </div>
-            <Button onClick={() => navigate("/companies/new")}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Company
-            </Button>
+            <PermissionGate permission="canDeleteRecords">
+              <Button onClick={() => navigate("/companies/new")}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Company
+              </Button>
+            </PermissionGate>
           </div>
 
           <Card className="p-6">

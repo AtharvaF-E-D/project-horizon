@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { PermissionGate } from "@/components/common/PermissionGate";
 import {
   Plus,
   Search,
@@ -161,13 +162,15 @@ const Campaigns = () => {
                 Create and manage your marketing campaigns
               </p>
             </div>
-            <Button
-              className="gradient-primary text-primary-foreground"
-              onClick={() => navigate("/campaigns/new")}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Create Campaign
-            </Button>
+            <PermissionGate permission="canCreateCampaigns">
+              <Button
+                className="gradient-primary text-primary-foreground"
+                onClick={() => navigate("/campaigns/new")}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create Campaign
+              </Button>
+            </PermissionGate>
           </div>
 
           {/* Stats */}
