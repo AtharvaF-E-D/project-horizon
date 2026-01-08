@@ -19,6 +19,7 @@ import {
   Filter,
   Workflow,
   Shield,
+  FileSpreadsheet,
   LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -48,6 +49,7 @@ const navItems: NavItem[] = [
   { icon: Users, label: "Subscribers", path: "/subscribers", permissionKey: "subscribers" },
   { icon: Mail, label: "Templates", path: "/email-templates", permissionKey: "emailTemplates" },
   { icon: Activity, label: "Audit Logs", path: "/audit-logs", permissionKey: "auditLogs" },
+  { icon: FileSpreadsheet, label: "Import/Export", path: "/data-import-export", permissionKey: "dataImportExport" },
   { icon: MessageCircle, label: "WhatsApp", path: "/whatsapp", permissionKey: "whatsapp" },
   { icon: Phone, label: "Calls", path: "/calls", permissionKey: "calls" },
   { icon: BarChart3, label: "Reports", path: "/reports", permissionKey: "reports" },

@@ -25,6 +25,7 @@ export interface RolePermissions {
   subscribers: boolean;
   emailTemplates: boolean;
   auditLogs: boolean;
+  dataImportExport: boolean;
   whatsapp: boolean;
   calls: boolean;
   reports: boolean;
@@ -60,6 +61,7 @@ const OWNER_PERMISSIONS: RolePermissions = {
   subscribers: true,
   emailTemplates: true,
   auditLogs: true,
+  dataImportExport: true,
   whatsapp: true,
   calls: true,
   reports: true,
@@ -97,6 +99,7 @@ const MANAGER_PERMISSIONS: RolePermissions = {
   subscribers: true,
   emailTemplates: true,
   auditLogs: false,
+  dataImportExport: true,
   whatsapp: true,
   calls: true,
   reports: true,
@@ -130,6 +133,7 @@ const AGENT_PERMISSIONS: RolePermissions = {
   subscribers: false,
   emailTemplates: true,
   auditLogs: false,
+  dataImportExport: false,
   whatsapp: true,
   calls: true,
   reports: false,
@@ -163,6 +167,7 @@ const VIEWER_PERMISSIONS: RolePermissions = {
   subscribers: true,
   emailTemplates: true,
   auditLogs: false,
+  dataImportExport: false,
   whatsapp: false,
   calls: false,
   reports: true,
@@ -210,6 +215,7 @@ export const ROUTE_PERMISSIONS: Record<string, keyof RolePermissions> = {
   "/subscribers": "subscribers",
   "/email-templates": "emailTemplates",
   "/audit-logs": "auditLogs",
+  "/data-import-export": "dataImportExport",
   "/whatsapp": "whatsapp",
   "/calls": "calls",
   "/reports": "reports",

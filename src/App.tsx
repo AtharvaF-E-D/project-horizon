@@ -36,6 +36,7 @@ import Team from "./pages/Team";
 import Notifications from "./pages/Notifications";
 import ActivityTimeline from "./pages/ActivityTimeline";
 import AuditLogs from "./pages/AuditLogs";
+import DataImportExport from "./pages/DataImportExport";
 import RoleManagement from "./pages/RoleManagement";
 import NotFound from "./pages/NotFound";
 
@@ -85,6 +86,7 @@ const App = () => (
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/activity" element={<ActivityTimeline />} />
           <Route path="/audit-logs" element={<AuditLogs />} />
+          <Route path="/data-import-export" element={<DataImportExport />} />
           <Route path="/roles" element={<RoleManagement />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
