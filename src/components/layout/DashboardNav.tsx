@@ -48,6 +48,7 @@ const navItems: NavItem[] = [
   { icon: Workflow, label: "Sequences", path: "/sequences", permissionKey: "sequences" },
   { icon: Users, label: "Subscribers", path: "/subscribers", permissionKey: "subscribers" },
   { icon: Mail, label: "Templates", path: "/email-templates", permissionKey: "emailTemplates" },
+  { icon: Users, label: "Team", path: "/team", permissionKey: "team" },
   { icon: Activity, label: "Audit Logs", path: "/audit-logs", permissionKey: "auditLogs" },
   { icon: FileSpreadsheet, label: "Import/Export", path: "/data-import-export", permissionKey: "dataImportExport" },
   { icon: MessageCircle, label: "WhatsApp", path: "/whatsapp", permissionKey: "whatsapp" },
