@@ -524,6 +524,7 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          is_active: boolean | null
           phone: string | null
           title: string | null
           updated_at: string
@@ -535,6 +536,7 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
+          is_active?: boolean | null
           phone?: string | null
           title?: string | null
           updated_at?: string
@@ -546,6 +548,7 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          is_active?: boolean | null
           phone?: string | null
           title?: string | null
           updated_at?: string
@@ -764,6 +767,36 @@ export type Database = {
           title?: string
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      team_invites: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
         }
         Relationships: []
       }
