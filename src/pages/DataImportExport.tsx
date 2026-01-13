@@ -1,10 +1,11 @@
 import { useState, useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { DashboardNavbar } from "@/components/layout/DashboardNavbar";
 import { DashboardNav } from "@/components/layout/DashboardNav";
+import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,6 +55,62 @@ interface ImportPreview {
   rows: string[][];
   mappings: ColumnMapping[];
 }
+
+// Security constants
+const MAX_FILE_SIZE_MB = 10;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+const MAX_ROWS_PER_IMPORT = 1000;
+
+// Sanitize CSV cell to prevent formula injection attacks
+const sanitizeCSVCell = (value: string): string => {
+  if (!value || typeof value !== 'string') return value;
+  // Prefix with apostrophe if starts with formula characters
+  if (/^[=+\-@\t\r]/.test(value)) {
+    return "'" + value;
+  }
+  return value.trim();
+};
+
+// Field validation schemas
+const emailSchema = z.string().email().max(255).optional().or(z.literal(''));
+const phoneSchema = z.string().max(50).regex(/^[\d\s\-\+\(\)\.]*$/, "Invalid phone format").optional().or(z.literal(''));
+const urlSchema = z.string().url().max(500).optional().or(z.literal(''));
+const textSchema = z.string().max(1000);
+const shortTextSchema = z.string().max(255);
+
+// Validate and sanitize a field based on its type
+const validateField = (value: string, fieldName: string): { valid: boolean; sanitized: string; error?: string } => {
+  const sanitized = sanitizeCSVCell(value);
+  
+  if (!sanitized) {
+    return { valid: true, sanitized };
+  }
+  
+  try {
+    switch (fieldName) {
+      case 'email':
+        emailSchema.parse(sanitized);
+        break;
+      case 'phone':
+        phoneSchema.parse(sanitized);
+        break;
+      case 'website':
+        urlSchema.parse(sanitized);
+        break;
+      case 'notes':
+        textSchema.parse(sanitized);
+        break;
+      default:
+        shortTextSchema.parse(sanitized);
+    }
+    return { valid: true, sanitized };
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      return { valid: false, sanitized, error: err.errors[0]?.message || 'Invalid value' };
+    }
+    return { valid: false, sanitized, error: 'Validation failed' };
+  }
+};
 
 const ENTITY_CONFIGS: Record<EntityType, { 
   label: string; 
@@ -141,13 +198,20 @@ const DataImportExport = () => {
     return { headers, rows };
   }, []);
 
-  // Handle file upload
+  // Handle file upload with security validations
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     
-    if (!file.name.endsWith('.csv')) {
+    // Validate file extension
+    if (!file.name.toLowerCase().endsWith('.csv')) {
       toast.error("Please upload a CSV file");
+      return;
+    }
+    
+    // Security: Validate file size
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      toast.error(`File too large. Maximum size is ${MAX_FILE_SIZE_MB}MB`);
       return;
     }
     
@@ -160,6 +224,12 @@ const DataImportExport = () => {
       
       if (headers.length === 0) {
         toast.error("Could not parse CSV file");
+        return;
+      }
+      
+      // Security: Validate row count
+      if (rows.length > MAX_ROWS_PER_IMPORT) {
+        toast.error(`File has ${rows.length} rows. Maximum allowed is ${MAX_ROWS_PER_IMPORT} rows per import.`);
         return;
       }
       
@@ -201,12 +271,11 @@ const DataImportExport = () => {
     return config.requiredFields.every(f => mappedFields.includes(f));
   }, [importPreview, importEntity]);
 
-  // Import data mutation
+  // Import data mutation with validation and sanitization
   const importMutation = useMutation({
     mutationFn: async () => {
       if (!importPreview || !user) throw new Error("No data to import");
       
-      const config = ENTITY_CONFIGS[importEntity];
       const mappings = importPreview.mappings.filter(m => m.dbColumn);
       const results = { success: 0, failed: 0, errors: [] as string[] };
       
@@ -214,29 +283,59 @@ const DataImportExport = () => {
       const text = await csvFile!.text();
       const { rows: allRows } = parseCSV(text);
       
+      // Security: Enforce row limit during import
+      const rowsToImport = allRows.slice(0, MAX_ROWS_PER_IMPORT);
+      if (allRows.length > MAX_ROWS_PER_IMPORT) {
+        toast.warning(`Importing first ${MAX_ROWS_PER_IMPORT} rows only. File contains ${allRows.length} rows.`);
+      }
+      
       setImportStep("importing");
       
-      for (let i = 0; i < allRows.length; i++) {
-        const row = allRows[i];
+      for (let i = 0; i < rowsToImport.length; i++) {
+        const row = rowsToImport[i];
         const record: Record<string, unknown> = { user_id: user.id };
+        let hasValidationError = false;
         
-        mappings.forEach(({ csvColumn, dbColumn }) => {
+        for (const { csvColumn, dbColumn } of mappings) {
           const colIndex = importPreview.headers.indexOf(csvColumn);
           if (colIndex >= 0 && row[colIndex]) {
-            let value: unknown = row[colIndex];
+            const rawValue = row[colIndex];
+            
+            // Security: Validate and sanitize field
+            const { valid, sanitized, error } = validateField(rawValue, dbColumn);
+            if (!valid) {
+              hasValidationError = true;
+              results.failed++;
+              if (results.errors.length < 5) {
+                results.errors.push(`Row ${i + 2}, ${dbColumn}: ${error}`);
+              }
+              break;
+            }
+            
+            let value: unknown = sanitized;
             
             // Type conversions
             if (dbColumn === "value" || dbColumn === "probability" || dbColumn === "score") {
-              value = parseFloat(value as string) || 0;
+              const parsed = parseFloat(sanitized);
+              if (isNaN(parsed) || parsed < 0 || parsed > 999999999) {
+                value = 0;
+              } else {
+                value = parsed;
+              }
             }
             if (dbColumn === "close_date") {
-              const date = new Date(value as string);
+              const date = new Date(sanitized);
               value = isNaN(date.getTime()) ? null : date.toISOString().split('T')[0];
             }
             
             record[dbColumn] = value;
           }
-        });
+        }
+        
+        if (hasValidationError) {
+          setImportProgress(Math.round(((i + 1) / rowsToImport.length) * 100));
+          continue;
+        }
         
         try {
           const { error } = await supabase.from(importEntity).insert(record as any);
@@ -252,7 +351,7 @@ const DataImportExport = () => {
           results.failed++;
         }
         
-        setImportProgress(Math.round(((i + 1) / allRows.length) * 100));
+        setImportProgress(Math.round(((i + 1) / rowsToImport.length) * 100));
       }
       
       return results;
