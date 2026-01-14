@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useAuditLogger } from "@/hooks/useAuditLogger";
 import { DashboardNavbar } from "@/components/layout/DashboardNavbar";
 import { DashboardNav } from "@/components/layout/DashboardNav";
 import { z } from "zod";
@@ -152,6 +153,7 @@ const ENTITY_CONFIGS: Record<EntityType, {
 const DataImportExport = () => {
   const { user } = useAuth();
   const { permissions, loading: rolesLoading } = useUserRole();
+  const { logDataExport, logDataImport } = useAuditLogger();
   const queryClient = useQueryClient();
   
   // Import state
@@ -360,6 +362,10 @@ const DataImportExport = () => {
       setImportResults(results);
       setImportStep("complete");
       queryClient.invalidateQueries({ queryKey: [importEntity] });
+      
+      // Log the import to audit trail
+      logDataImport(importEntity, results.success, results.failed, csvFile?.name);
+      
       toast.success(`Imported ${results.success} records`);
     },
     onError: (error) => {
@@ -412,9 +418,13 @@ const DataImportExport = () => {
       link.download = `${exportEntity}-export-${format(new Date(), "yyyy-MM-dd")}.csv`;
       link.click();
       
+      // Log the export to audit trail
+      await logDataExport(exportEntity, data.length, selectedFields);
+      
       toast.success(`Exported ${data.length} ${exportEntity}`);
-    } catch (error: any) {
-      toast.error("Export failed: " + error.message);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      toast.error("Export failed: " + errorMessage);
     } finally {
       setIsExporting(false);
     }
