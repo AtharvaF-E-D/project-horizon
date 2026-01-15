@@ -5,6 +5,7 @@ import { DashboardNav } from "@/components/layout/DashboardNav";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useAuditLogger } from "@/hooks/useAuditLogger";
+import { useRateLimiter } from "@/hooks/useRateLimiter";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,6 +59,7 @@ const RoleManagement = () => {
   const { user, loading: authLoading } = useAuth();
   const { canManageRoles, isOwner, loading: roleLoading, permissions } = useUserRole();
   const { logRoleChange } = useAuditLogger();
+  const { checkRateLimit } = useRateLimiter();
   const { toast } = useToast();
 
   const [users, setUsers] = useState<UserWithRole[]>([]);
@@ -145,6 +147,12 @@ const RoleManagement = () => {
         description: "Only owners can assign the owner role.",
         variant: "destructive",
       });
+      return;
+    }
+
+    // Check rate limit before proceeding
+    const rateLimit = await checkRateLimit("role_change");
+    if (!rateLimit.allowed) {
       return;
     }
 
