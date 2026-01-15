@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useAuditLogger } from "@/hooks/useAuditLogger";
+import { useRateLimiter } from "@/hooks/useRateLimiter";
 import { DashboardNavbar } from "@/components/layout/DashboardNavbar";
 import { DashboardNav } from "@/components/layout/DashboardNav";
 import { z } from "zod";
@@ -154,6 +155,7 @@ const DataImportExport = () => {
   const { user } = useAuth();
   const { permissions, loading: rolesLoading } = useUserRole();
   const { logDataExport, logDataImport } = useAuditLogger();
+  const { checkRateLimit } = useRateLimiter();
   const queryClient = useQueryClient();
   
   // Import state
@@ -278,6 +280,12 @@ const DataImportExport = () => {
     mutationFn: async () => {
       if (!importPreview || !user) throw new Error("No data to import");
       
+      // Check rate limit before proceeding
+      const rateLimit = await checkRateLimit("data_import");
+      if (!rateLimit.allowed) {
+        throw new Error("Rate limit exceeded");
+      }
+      
       const mappings = importPreview.mappings.filter(m => m.dbColumn);
       const results = { success: 0, failed: 0, errors: [] as string[] };
       
@@ -377,6 +385,12 @@ const DataImportExport = () => {
   // Export data
   const handleExport = async () => {
     if (!user || selectedFields.length === 0) return;
+    
+    // Check rate limit before proceeding
+    const rateLimit = await checkRateLimit("data_export");
+    if (!rateLimit.allowed) {
+      return;
+    }
     
     setIsExporting(true);
     
