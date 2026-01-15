@@ -34,6 +34,31 @@ interface AuditLogParams {
   details?: Record<string, string | number | boolean | string[] | null | undefined>;
 }
 
+// Critical events that trigger email notifications
+const CRITICAL_EVENTS: AuditAction[] = [
+  "role_assigned",
+  "role_changed",
+  "role_removed",
+  "data_exported",
+  "data_imported",
+];
+
+const sendSecurityAlert = async (
+  eventType: string,
+  details: Record<string, any>
+) => {
+  try {
+    const { error } = await supabase.functions.invoke("security-alerts", {
+      body: { event_type: eventType, details },
+    });
+    if (error) {
+      console.error("Failed to send security alert:", error);
+    }
+  } catch (err) {
+    console.error("Error sending security alert:", err);
+  }
+};
+
 export const useAuditLogger = () => {
   const { user } = useAuth();
 
@@ -67,11 +92,44 @@ export const useAuditLogger = () => {
         if (error) {
           console.error("Failed to log audit event:", error);
         }
+
+        // Send email notification for critical events
+        if (CRITICAL_EVENTS.includes(action)) {
+          await sendSecurityAlert(action, {
+            ...details,
+            actor_email: profile?.email || user.email,
+            timestamp: new Date().toISOString(),
+          });
+        }
       } catch (err) {
         console.error("Error logging audit event:", err);
       }
     },
     [user]
+  );
+
+  const logRoleChange = useCallback(
+    async (
+      action: "role_assigned" | "role_changed" | "role_removed",
+      targetUserId: string,
+      targetEmail: string,
+      oldRole?: string,
+      newRole?: string
+    ) => {
+      await logAuditEvent({
+        action,
+        entityType: "user_role",
+        entityId: targetUserId,
+        details: {
+          target_user_id: targetUserId,
+          target_email: targetEmail,
+          old_role: oldRole,
+          new_role: newRole,
+          timestamp: new Date().toISOString(),
+        },
+      });
+    },
+    [logAuditEvent]
   );
 
   const logDataExport = useCallback(
@@ -84,6 +142,7 @@ export const useAuditLogger = () => {
           exported_entity: entityType,
           record_count: recordCount,
           fields: fields || [],
+          entity_type: entityType,
           timestamp: new Date().toISOString(),
         },
       });
@@ -106,7 +165,9 @@ export const useAuditLogger = () => {
           imported_entity: entityType,
           success_count: successCount,
           error_count: errorCount,
+          record_count: successCount,
           file_name: fileName,
+          entity_type: entityType,
           timestamp: new Date().toISOString(),
         },
       });
@@ -153,6 +214,7 @@ export const useAuditLogger = () => {
 
   return {
     logAuditEvent,
+    logRoleChange,
     logDataExport,
     logDataImport,
     logSettingsChange,

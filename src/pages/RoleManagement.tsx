@@ -4,6 +4,7 @@ import { DashboardNavbar } from "@/components/layout/DashboardNavbar";
 import { DashboardNav } from "@/components/layout/DashboardNav";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useAuditLogger } from "@/hooks/useAuditLogger";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -56,6 +57,7 @@ const RoleManagement = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { canManageRoles, isOwner, loading: roleLoading, permissions } = useUserRole();
+  const { logRoleChange } = useAuditLogger();
   const { toast } = useToast();
 
   const [users, setUsers] = useState<UserWithRole[]>([]);
@@ -146,6 +148,9 @@ const RoleManagement = () => {
       return;
     }
 
+    const targetUser = users.find(u => u.id === userId);
+    const oldRole = targetUser?.role;
+
     setUpdatingUserId(userId);
     try {
       // Check if user already has a role entry
@@ -163,6 +168,15 @@ const RoleManagement = () => {
           .eq("user_id", userId);
 
         if (error) throw error;
+
+        // Log role change with email notification
+        await logRoleChange(
+          "role_changed",
+          userId,
+          targetUser?.email || "",
+          oldRole,
+          newRole
+        );
       } else {
         // Insert new role
         const { error } = await supabase
@@ -170,6 +184,15 @@ const RoleManagement = () => {
           .insert({ user_id: userId, role: newRole });
 
         if (error) throw error;
+
+        // Log role assignment with email notification
+        await logRoleChange(
+          "role_assigned",
+          userId,
+          targetUser?.email || "",
+          undefined,
+          newRole
+        );
       }
 
       // Update local state
