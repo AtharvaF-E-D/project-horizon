@@ -11,7 +11,7 @@ const corsHeaders = {
 };
 
 interface SecurityAlertRequest {
-  event_type: "role_changed" | "role_assigned" | "role_removed" | "data_exported" | "data_imported" | "suspicious_login";
+  event_type: "role_changed" | "role_assigned" | "role_removed" | "data_exported" | "data_imported" | "suspicious_login" | "rate_limit_warning" | "rate_limit_exceeded";
   details: {
     actor_email?: string;
     target_email?: string;
@@ -22,6 +22,11 @@ interface SecurityAlertRequest {
     file_name?: string;
     ip_address?: string;
     timestamp?: string;
+    action_type?: string;
+    current_count?: number;
+    max_requests?: number;
+    percentage?: number;
+    window_minutes?: number;
   };
 }
 
@@ -33,6 +38,8 @@ const getEmailSubject = (eventType: string): string => {
     data_exported: "📤 Security Alert: Data Export Detected",
     data_imported: "📥 Security Alert: Data Import Detected",
     suspicious_login: "⚠️ Security Alert: Suspicious Login Attempt",
+    rate_limit_warning: "⚡ Rate Limit Warning: User Approaching Limit",
+    rate_limit_exceeded: "🚫 Rate Limit Exceeded: User Blocked",
   };
   return subjects[eventType] || "🔐 Security Alert";
 };
@@ -161,6 +168,67 @@ const getEmailContent = (eventType: string, details: SecurityAlertRequest["detai
           </tr>
           ` : ""}
         </table>
+      `;
+      break;
+
+    case "rate_limit_warning":
+      content += `
+        <h2 style="color: #1e293b; margin-top: 0;">⚡ Rate Limit Warning</h2>
+        <p style="color: #475569;">A user is approaching their rate limit threshold (90%+).</p>
+        <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+          <tr style="background: #fef3c7;">
+            <td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 600;">User</td>
+            <td style="padding: 12px; border: 1px solid #e2e8f0;">${details.actor_email || "Unknown"}</td>
+          </tr>
+          <tr>
+            <td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 600;">Action Type</td>
+            <td style="padding: 12px; border: 1px solid #e2e8f0;"><span style="background: #dbeafe; color: #1e40af; padding: 4px 8px; border-radius: 4px;">${details.action_type?.replace(/_/g, " ") || "Unknown"}</span></td>
+          </tr>
+          <tr style="background: #f1f5f9;">
+            <td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 600;">Current Usage</td>
+            <td style="padding: 12px; border: 1px solid #e2e8f0;">
+              <span style="background: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 4px;">${details.current_count} / ${details.max_requests}</span>
+              <span style="color: #92400e; margin-left: 8px;">(${details.percentage?.toFixed(0)}%)</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 600;">Time Window</td>
+            <td style="padding: 12px; border: 1px solid #e2e8f0;">${details.window_minutes} minutes</td>
+          </tr>
+        </table>
+        <p style="color: #92400e; background: #fef3c7; padding: 12px; border-radius: 4px; margin-top: 16px;">
+          ⚠️ This user may be blocked soon if they continue at this rate.
+        </p>
+      `;
+      break;
+
+    case "rate_limit_exceeded":
+      content += `
+        <h2 style="color: #dc2626; margin-top: 0;">🚫 Rate Limit Exceeded</h2>
+        <p style="color: #475569;">A user has exceeded their rate limit and has been temporarily blocked.</p>
+        <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+          <tr style="background: #fee2e2;">
+            <td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 600;">User</td>
+            <td style="padding: 12px; border: 1px solid #e2e8f0;">${details.actor_email || "Unknown"}</td>
+          </tr>
+          <tr>
+            <td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 600;">Blocked Action</td>
+            <td style="padding: 12px; border: 1px solid #e2e8f0;"><span style="background: #fee2e2; color: #dc2626; padding: 4px 8px; border-radius: 4px;">${details.action_type?.replace(/_/g, " ") || "Unknown"}</span></td>
+          </tr>
+          <tr style="background: #f1f5f9;">
+            <td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 600;">Attempts</td>
+            <td style="padding: 12px; border: 1px solid #e2e8f0;">
+              <span style="background: #fee2e2; color: #dc2626; padding: 4px 8px; border-radius: 4px;">${details.current_count} / ${details.max_requests}</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 600;">Cooldown Period</td>
+            <td style="padding: 12px; border: 1px solid #e2e8f0;">${details.window_minutes} minutes</td>
+          </tr>
+        </table>
+        <p style="color: #dc2626; background: #fee2e2; padding: 12px; border-radius: 4px; margin-top: 16px;">
+          🔒 This user is temporarily blocked from performing this action. You can manually reset their limit from the Rate Limits dashboard if needed.
+        </p>
       `;
       break;
 
