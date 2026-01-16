@@ -20,6 +20,7 @@ import {
   Workflow,
   Shield,
   FileSpreadsheet,
+  Gauge,
   LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -51,6 +52,7 @@ const navItems: NavItem[] = [
   { icon: Users, label: "Team", path: "/team", permissionKey: "team" },
   { icon: Activity, label: "Audit Logs", path: "/audit-logs", permissionKey: "auditLogs" },
   { icon: FileSpreadsheet, label: "Import/Export", path: "/data-import-export", permissionKey: "dataImportExport" },
+  { icon: Gauge, label: "Rate Limits", path: "/rate-limits", permissionKey: "rateLimits" },
   { icon: MessageCircle, label: "WhatsApp", path: "/whatsapp", permissionKey: "whatsapp" },
   { icon: Phone, label: "Calls", path: "/calls", permissionKey: "calls" },
   { icon: BarChart3, label: "Reports", path: "/reports", permissionKey: "reports" },
