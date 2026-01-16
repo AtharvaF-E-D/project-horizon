@@ -38,6 +38,7 @@ import ActivityTimeline from "./pages/ActivityTimeline";
 import AuditLogs from "./pages/AuditLogs";
 import DataImportExport from "./pages/DataImportExport";
 import RoleManagement from "./pages/RoleManagement";
+import RateLimitDashboard from "./pages/RateLimitDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -88,6 +89,7 @@ const App = () => (
           <Route path="/audit-logs" element={<AuditLogs />} />
           <Route path="/data-import-export" element={<DataImportExport />} />
           <Route path="/roles" element={<RoleManagement />} />
+          <Route path="/rate-limits" element={<RateLimitDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
