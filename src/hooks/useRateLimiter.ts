@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -32,9 +32,65 @@ interface RateLimitResponse {
   retry_after_seconds?: number;
 }
 
+// Track which alerts have been sent to avoid duplicates
+const alertsSentThisSession: Set<string> = new Set();
+
 export const useRateLimiter = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const warningsSent = useRef<Set<string>>(new Set());
+
+  // Send rate limit alert to admins
+  const sendRateLimitAlert = useCallback(
+    async (
+      alertType: "rate_limit_warning" | "rate_limit_exceeded",
+      actionType: RateLimitAction,
+      currentCount: number,
+      maxRequests: number,
+      percentage: number
+    ) => {
+      if (!user) return;
+
+      // Create a unique key for this alert to prevent duplicates
+      const alertKey = `${user.id}-${actionType}-${alertType}`;
+      
+      // Check if we've already sent this alert this session
+      if (alertsSentThisSession.has(alertKey)) {
+        console.log(`Rate limit alert already sent: ${alertKey}`);
+        return;
+      }
+
+      try {
+        const config = RATE_LIMIT_CONFIG[actionType];
+        
+        const { error } = await supabase.functions.invoke("security-alerts", {
+          body: {
+            event_type: alertType,
+            details: {
+              actor_email: user.email,
+              action_type: actionType,
+              current_count: currentCount,
+              max_requests: maxRequests,
+              percentage,
+              window_minutes: config.windowMinutes,
+              timestamp: new Date().toISOString(),
+            },
+          },
+        });
+
+        if (error) {
+          console.error("Failed to send rate limit alert:", error);
+        } else {
+          // Mark this alert as sent
+          alertsSentThisSession.add(alertKey);
+          console.log(`Rate limit alert sent: ${alertKey}`);
+        }
+      } catch (err) {
+        console.error("Error sending rate limit alert:", err);
+      }
+    },
+    [user]
+  );
 
   const checkRateLimit = useCallback(
     async (actionType: RateLimitAction): Promise<RateLimitResult> => {
@@ -76,6 +132,23 @@ export const useRateLimiter = () => {
           retryAfterSeconds: response.retry_after_seconds,
         };
 
+        // Calculate percentage
+        const percentage = (result.currentCount / result.maxRequests) * 100;
+
+        // Send warning alert at 90% threshold (only once per session per action)
+        const warningKey = `${user.id}-${actionType}`;
+        if (percentage >= 90 && percentage < 100 && !warningsSent.current.has(warningKey)) {
+          warningsSent.current.add(warningKey);
+          sendRateLimitAlert(
+            "rate_limit_warning",
+            actionType,
+            result.currentCount,
+            result.maxRequests,
+            percentage
+          );
+        }
+
+        // Send exceeded alert when limit is reached
         if (!result.allowed) {
           const retryMinutes = Math.ceil((result.retryAfterSeconds || 0) / 60);
           toast({
@@ -83,6 +156,15 @@ export const useRateLimiter = () => {
             description: `Too many ${actionType.replace(/_/g, " ")} attempts. Please try again in ${retryMinutes} minute${retryMinutes !== 1 ? "s" : ""}.`,
             variant: "destructive",
           });
+
+          // Send exceeded alert
+          sendRateLimitAlert(
+            "rate_limit_exceeded",
+            actionType,
+            result.currentCount,
+            result.maxRequests,
+            100
+          );
         }
 
         return result;
@@ -96,7 +178,7 @@ export const useRateLimiter = () => {
         };
       }
     },
-    [user, toast]
+    [user, toast, sendRateLimitAlert]
   );
 
   const withRateLimit = useCallback(
