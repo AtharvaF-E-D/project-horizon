@@ -42,7 +42,10 @@ import {
   KeyRound,
   FileDown,
   FileUp,
-  UserCog
+  UserCog,
+  Gauge,
+  AlertTriangle,
+  Ban
 } from "lucide-react";
 import { format, formatDistanceToNow, isToday, isYesterday, subDays, startOfDay, endOfDay } from "date-fns";
 import { useState, useMemo } from "react";
@@ -160,7 +163,7 @@ const AuditLogs = () => {
   const [filterAction, setFilterAction] = useState<string>("all");
   const [dateRange, setDateRange] = useState<string>("7");
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<"activity" | "security">("activity");
+  const [activeTab, setActiveTab] = useState<"activity" | "security" | "rate-limits">("activity");
 
   // Fetch all profiles for user attribution
   const { data: profiles } = useQuery({
@@ -211,7 +214,7 @@ const AuditLogs = () => {
     enabled: !!user && activeTab === "activity",
   });
 
-  // Fetch security audit logs
+  // Fetch security audit logs (excluding rate limit events)
   const { data: securityLogs, isLoading: securityLoading } = useQuery({
     queryKey: ["security-audit-logs", dateRange, searchQuery],
     queryFn: async () => {
@@ -223,6 +226,7 @@ const AuditLogs = () => {
         .from("audit_logs")
         .select("*")
         .gte("created_at", startDate.toISOString())
+        .not("entity_type", "eq", "rate_limit")
         .order("created_at", { ascending: false })
         .limit(500);
 
@@ -230,6 +234,28 @@ const AuditLogs = () => {
       return data as SecurityAuditLog[];
     },
     enabled: !!user && activeTab === "security",
+  });
+
+  // Fetch rate limit audit logs
+  const { data: rateLimitLogs, isLoading: rateLimitLoading } = useQuery({
+    queryKey: ["rate-limit-audit-logs", dateRange, searchQuery],
+    queryFn: async () => {
+      const startDate = dateRange === "all" 
+        ? new Date('2020-01-01') 
+        : startOfDay(subDays(new Date(), parseInt(dateRange)));
+      
+      const { data, error } = await supabase
+        .from("audit_logs")
+        .select("*")
+        .gte("created_at", startDate.toISOString())
+        .eq("entity_type", "rate_limit")
+        .order("created_at", { ascending: false })
+        .limit(500);
+
+      if (error) throw error;
+      return data as SecurityAuditLog[];
+    },
+    enabled: !!user && activeTab === "rate-limits",
   });
 
   // Filter activities by search query
@@ -261,6 +287,20 @@ const AuditLogs = () => {
     );
   }, [securityLogs, searchQuery]);
 
+  // Filter rate limit logs by search query
+  const filteredRateLimitLogs = useMemo(() => {
+    if (!rateLimitLogs) return [];
+    if (!searchQuery) return rateLimitLogs;
+    
+    const query = searchQuery.toLowerCase();
+    return rateLimitLogs.filter(log => 
+      log.action.toLowerCase().includes(query) ||
+      log.entity_id?.toLowerCase().includes(query) ||
+      log.user_email?.toLowerCase().includes(query) ||
+      JSON.stringify(log.details).toLowerCase().includes(query)
+    );
+  }, [rateLimitLogs, searchQuery]);
+
   // Security stats
   const securityStats = useMemo(() => {
     if (!filteredSecurityLogs) return { total: 0, today: 0, roleChanges: 0, dataExports: 0 };
@@ -276,6 +316,22 @@ const AuditLogs = () => {
       dataExports
     };
   }, [filteredSecurityLogs]);
+
+  // Rate limit stats
+  const rateLimitStats = useMemo(() => {
+    if (!filteredRateLimitLogs) return { total: 0, today: 0, warnings: 0, exceeded: 0 };
+    
+    const todayLogs = filteredRateLimitLogs.filter(l => isToday(new Date(l.created_at)));
+    const warnings = filteredRateLimitLogs.filter(l => l.action === 'rate_limit_warning').length;
+    const exceeded = filteredRateLimitLogs.filter(l => l.action === 'rate_limit_exceeded').length;
+    
+    return {
+      total: filteredRateLimitLogs.length,
+      today: todayLogs.length,
+      warnings,
+      exceeded
+    };
+  }, [filteredRateLimitLogs]);
 
   // Export to CSV
   const exportToCSV = () => {
@@ -359,7 +415,7 @@ const AuditLogs = () => {
           </div>
 
           {/* Tabs */}
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "activity" | "security")} className="space-y-6">
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "activity" | "security" | "rate-limits")} className="space-y-6">
             <TabsList>
               <TabsTrigger value="activity" className="gap-2">
                 <Activity className="w-4 h-4" />
@@ -368,6 +424,10 @@ const AuditLogs = () => {
               <TabsTrigger value="security" className="gap-2">
                 <KeyRound className="w-4 h-4" />
                 Security Events
+              </TabsTrigger>
+              <TabsTrigger value="rate-limits" className="gap-2">
+                <Gauge className="w-4 h-4" />
+                Rate Limit Alerts
               </TabsTrigger>
             </TabsList>
 
@@ -823,6 +883,214 @@ const AuditLogs = () => {
                         {searchQuery 
                           ? "Try adjusting your search"
                           : "Security events like role changes and data exports will appear here"}
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Rate Limit Alerts Tab */}
+            <TabsContent value="rate-limits" className="space-y-6">
+              {/* Rate Limit Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-primary/10 rounded-lg">
+                        <Gauge className="w-6 h-6 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold">{rateLimitStats.total}</p>
+                        <p className="text-sm text-muted-foreground">Total Alerts</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-emerald-500/10 rounded-lg">
+                        <Clock className="w-6 h-6 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold">{rateLimitStats.today}</p>
+                        <p className="text-sm text-muted-foreground">Today's Alerts</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-amber-500/10 rounded-lg">
+                        <AlertTriangle className="w-6 h-6 text-amber-600" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold">{rateLimitStats.warnings}</p>
+                        <p className="text-sm text-muted-foreground">90% Warnings</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-red-500/10 rounded-lg">
+                        <Ban className="w-6 h-6 text-red-600" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold">{rateLimitStats.exceeded}</p>
+                        <p className="text-sm text-muted-foreground">Limit Exceeded</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Rate Limit Filters */}
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <Filter className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Filters:</span>
+                    </div>
+                    
+                    <div className="relative flex-1 min-w-[200px] max-w-sm">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search rate limit alerts..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-9"
+                      />
+                    </div>
+
+                    <Select value={dateRange} onValueChange={setDateRange}>
+                      <SelectTrigger className="w-36">
+                        <SelectValue placeholder="Date range" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">Last 24 hours</SelectItem>
+                        <SelectItem value="7">Last 7 days</SelectItem>
+                        <SelectItem value="30">Last 30 days</SelectItem>
+                        <SelectItem value="90">Last 90 days</SelectItem>
+                        <SelectItem value="all">All time</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Rate Limit Events Table */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Gauge className="w-5 h-5 text-primary" />
+                    Rate Limit Alert History
+                    <Badge variant="secondary" className="ml-2">{filteredRateLimitLogs.length} entries</Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {rateLimitLoading ? (
+                    <div className="space-y-4">
+                      {[...Array(10)].map((_, i) => (
+                        <div key={i} className="flex items-center gap-4">
+                          <Skeleton className="w-10 h-10 rounded-full" />
+                          <div className="flex-1 space-y-2">
+                            <Skeleton className="h-4 w-3/4" />
+                            <Skeleton className="h-3 w-1/2" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : filteredRateLimitLogs.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-[180px]">Timestamp</TableHead>
+                            <TableHead className="w-[200px]">User</TableHead>
+                            <TableHead className="w-[140px]">Alert Type</TableHead>
+                            <TableHead className="w-[140px]">Action Type</TableHead>
+                            <TableHead>Usage Details</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredRateLimitLogs.map((log) => {
+                            const isWarning = log.action === 'rate_limit_warning';
+                            const details = log.details as Record<string, unknown>;
+                            
+                            return (
+                              <TableRow key={log.id}>
+                                <TableCell className="font-mono text-xs text-muted-foreground">
+                                  <div className="flex flex-col">
+                                    <span>{format(new Date(log.created_at), "MMM d, yyyy")}</span>
+                                    <span>{format(new Date(log.created_at), "HH:mm:ss")}</span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="min-w-0">
+                                    <p className="text-sm font-medium truncate">
+                                      {log.user_email || "Unknown"}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground truncate">
+                                      {log.user_id.slice(0, 8)}...
+                                    </p>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge 
+                                    variant="outline" 
+                                    className={isWarning 
+                                      ? "bg-amber-500/10 text-amber-600 border-amber-200" 
+                                      : "bg-red-500/10 text-red-600 border-red-200"
+                                    }
+                                  >
+                                    {isWarning ? (
+                                      <><AlertTriangle className="w-3 h-3 mr-1" /> 90% Warning</>
+                                    ) : (
+                                      <><Ban className="w-3 h-3 mr-1" /> Exceeded</>
+                                    )}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant="secondary" className="capitalize text-xs">
+                                    {(log.entity_id || 'unknown').replace(/_/g, ' ')}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="min-w-0 max-w-md text-xs text-muted-foreground space-y-1">
+                                    <div className="flex items-center gap-4">
+                                      <span>
+                                        <span className="font-medium">Usage: </span>
+                                        {String(details.current_count || 0)} / {String(details.max_requests || 0)}
+                                      </span>
+                                      <span>
+                                        <span className="font-medium">({String(details.percentage || 0)}%)</span>
+                                      </span>
+                                    </div>
+                                    <div>
+                                      <span className="font-medium">Window: </span>
+                                      {String(details.window_minutes || 60)} minutes
+                                    </div>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <Gauge className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-foreground mb-2">No rate limit alerts found</h3>
+                      <p className="text-muted-foreground">
+                        {searchQuery 
+                          ? "Try adjusting your search"
+                          : "Rate limit warnings and exceeded alerts will appear here"}
                       </p>
                     </div>
                   )}

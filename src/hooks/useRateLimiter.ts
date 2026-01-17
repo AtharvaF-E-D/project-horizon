@@ -40,6 +40,47 @@ export const useRateLimiter = () => {
   const { toast } = useToast();
   const warningsSent = useRef<Set<string>>(new Set());
 
+  // Log rate limit alert to audit_logs table
+  const logRateLimitAudit = useCallback(
+    async (
+      alertType: "rate_limit_warning" | "rate_limit_exceeded",
+      actionType: RateLimitAction,
+      currentCount: number,
+      maxRequests: number,
+      percentage: number
+    ) => {
+      if (!user) return;
+
+      const config = RATE_LIMIT_CONFIG[actionType];
+
+      try {
+        const { error } = await supabase.from("audit_logs").insert({
+          user_id: user.id,
+          user_email: user.email,
+          action: alertType,
+          entity_type: "rate_limit",
+          entity_id: actionType,
+          details: {
+            action_type: actionType,
+            current_count: currentCount,
+            max_requests: maxRequests,
+            percentage: Math.round(percentage),
+            window_minutes: config.windowMinutes,
+            threshold_type: alertType === "rate_limit_warning" ? "90%" : "exceeded",
+          },
+          user_agent: navigator.userAgent,
+        });
+
+        if (error) {
+          console.error("Failed to log rate limit audit:", error);
+        }
+      } catch (err) {
+        console.error("Error logging rate limit audit:", err);
+      }
+    },
+    [user]
+  );
+
   // Send rate limit alert to admins
   const sendRateLimitAlert = useCallback(
     async (
@@ -63,6 +104,10 @@ export const useRateLimiter = () => {
       try {
         const config = RATE_LIMIT_CONFIG[actionType];
         
+        // Log to audit_logs table
+        await logRateLimitAudit(alertType, actionType, currentCount, maxRequests, percentage);
+        
+        // Send email notification
         const { error } = await supabase.functions.invoke("security-alerts", {
           body: {
             event_type: alertType,
@@ -89,7 +134,7 @@ export const useRateLimiter = () => {
         console.error("Error sending rate limit alert:", err);
       }
     },
-    [user]
+    [user, logRateLimitAudit]
   );
 
   const checkRateLimit = useCallback(
