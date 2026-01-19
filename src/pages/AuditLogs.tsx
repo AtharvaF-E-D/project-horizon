@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RateLimitTrendsChart } from "@/components/audit/RateLimitTrendsChart";
+import { TopOffendersWidget } from "@/components/audit/TopOffendersWidget";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Table,
@@ -951,6 +952,9 @@ const AuditLogs = () => {
 
               {/* Rate Limit Trends Chart */}
               <RateLimitTrendsChart logs={rateLimitLogs || []} dateRange={dateRange} />
+
+              {/* Top Offenders Widget */}
+              <TopOffendersWidget logs={rateLimitLogs || []} />
 
               {/* Rate Limit Filters */}
               <Card>
