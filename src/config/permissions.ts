@@ -27,6 +27,7 @@ export interface RolePermissions {
   auditLogs: boolean;
   dataImportExport: boolean;
   rateLimits: boolean;
+  suspendedUsers: boolean;
   whatsapp: boolean;
   calls: boolean;
   reports: boolean;
@@ -64,6 +65,7 @@ const OWNER_PERMISSIONS: RolePermissions = {
   auditLogs: true,
   dataImportExport: true,
   rateLimits: true,
+  suspendedUsers: true,
   whatsapp: true,
   calls: true,
   reports: true,
@@ -103,6 +105,7 @@ const MANAGER_PERMISSIONS: RolePermissions = {
   auditLogs: false,
   dataImportExport: true,
   rateLimits: false,
+  suspendedUsers: false,
   whatsapp: true,
   calls: true,
   reports: true,
@@ -138,6 +141,7 @@ const AGENT_PERMISSIONS: RolePermissions = {
   auditLogs: false,
   dataImportExport: false,
   rateLimits: false,
+  suspendedUsers: false,
   whatsapp: true,
   calls: true,
   reports: false,
@@ -173,6 +177,7 @@ const VIEWER_PERMISSIONS: RolePermissions = {
   auditLogs: false,
   dataImportExport: false,
   rateLimits: false,
+  suspendedUsers: false,
   whatsapp: false,
   calls: false,
   reports: true,
@@ -222,6 +227,7 @@ export const ROUTE_PERMISSIONS: Record<string, keyof RolePermissions> = {
   "/audit-logs": "auditLogs",
   "/data-import-export": "dataImportExport",
   "/rate-limits": "rateLimits",
+  "/suspended-users": "suspendedUsers",
   "/whatsapp": "whatsapp",
   "/calls": "calls",
   "/reports": "reports",
