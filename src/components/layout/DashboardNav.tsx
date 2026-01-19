@@ -21,6 +21,7 @@ import {
   Shield,
   FileSpreadsheet,
   Gauge,
+  UserX,
   LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -53,6 +54,7 @@ const navItems: NavItem[] = [
   { icon: Activity, label: "Audit Logs", path: "/audit-logs", permissionKey: "auditLogs" },
   { icon: FileSpreadsheet, label: "Import/Export", path: "/data-import-export", permissionKey: "dataImportExport" },
   { icon: Gauge, label: "Rate Limits", path: "/rate-limits", permissionKey: "rateLimits" },
+  { icon: UserX, label: "Suspended Users", path: "/suspended-users", permissionKey: "suspendedUsers" },
   { icon: MessageCircle, label: "WhatsApp", path: "/whatsapp", permissionKey: "whatsapp" },
   { icon: Phone, label: "Calls", path: "/calls", permissionKey: "calls" },
   { icon: BarChart3, label: "Reports", path: "/reports", permissionKey: "reports" },
