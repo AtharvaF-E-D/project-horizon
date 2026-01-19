@@ -565,6 +565,8 @@ export type Database = {
           id: string
           is_active: boolean | null
           phone: string | null
+          suspended_until: string | null
+          suspension_reason: string | null
           title: string | null
           updated_at: string
         }
@@ -577,6 +579,8 @@ export type Database = {
           id: string
           is_active?: boolean | null
           phone?: string | null
+          suspended_until?: string | null
+          suspension_reason?: string | null
           title?: string | null
           updated_at?: string
         }
@@ -589,6 +593,8 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           phone?: string | null
+          suspended_until?: string | null
+          suspension_reason?: string | null
           title?: string | null
           updated_at?: string
         }
@@ -908,6 +914,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_user_suspended: { Args: { p_user_id: string }; Returns: boolean }
     }
     Enums: {
       activity_type:
