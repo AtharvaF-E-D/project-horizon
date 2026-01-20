@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useAuditLogger } from "@/hooks/useAuditLogger";
 import { DashboardNavbar } from "@/components/layout/DashboardNavbar";
 import { DashboardNav } from "@/components/layout/DashboardNav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -94,6 +95,7 @@ const getSuspensionEndDate = (duration: SuspensionDuration): Date | null => {
 const SuspendedUsers = () => {
   const { user } = useAuth();
   const { permissions, loading: rolesLoading } = useUserRole();
+  const { logSuspension } = useAuditLogger();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<"all" | "temporary" | "permanent">("all");
@@ -132,7 +134,13 @@ const SuspendedUsers = () => {
 
   // Lift suspension mutation
   const liftSuspensionMutation = useMutation({
-    mutationFn: async (userId: string) => {
+    mutationFn: async ({
+      userId,
+      targetEmail,
+    }: {
+      userId: string;
+      targetEmail: string;
+    }) => {
       const { error } = await supabase
         .from("profiles")
         .update({
@@ -144,17 +152,14 @@ const SuspendedUsers = () => {
 
       if (error) throw error;
 
-      // Log the action
-      await supabase.from("audit_logs").insert({
-        user_id: user?.id || "",
-        user_email: user?.email || null,
-        action: "suspension_lifted",
-        entity_type: "user_suspension",
-        entity_id: userId,
-        details: { target_user_id: userId },
-      });
+      // Log and send email notification
+      await logSuspension(
+        "suspension_lifted",
+        userId,
+        targetEmail
+      );
 
-      return userId;
+      return { userId, targetEmail };
     },
     onSuccess: () => {
       toast.success("Suspension lifted successfully");
@@ -171,10 +176,12 @@ const SuspendedUsers = () => {
   const editSuspensionMutation = useMutation({
     mutationFn: async ({
       userId,
+      targetEmail,
       duration,
       reason,
     }: {
       userId: string;
+      targetEmail: string;
       duration: SuspensionDuration;
       reason: string;
     }) => {
@@ -192,20 +199,15 @@ const SuspendedUsers = () => {
 
       if (error) throw error;
 
-      // Log the action
-      await supabase.from("audit_logs").insert({
-        user_id: user?.id || "",
-        user_email: user?.email || null,
-        action: "suspension_modified",
-        entity_type: "user_suspension",
-        entity_id: userId,
-        details: {
-          target_user_id: userId,
-          new_duration: duration,
-          new_reason: reason,
-          suspended_until: endDate?.toISOString() || "permanent",
-        },
-      });
+      // Log and send email notification
+      await logSuspension(
+        "suspension_modified",
+        userId,
+        targetEmail,
+        duration,
+        reason,
+        endDate?.toISOString() || "permanent"
+      );
 
       return { userId, duration };
     },
@@ -615,7 +617,10 @@ const SuspendedUsers = () => {
               Cancel
             </Button>
             <Button
-              onClick={() => selectedUser && liftSuspensionMutation.mutate(selectedUser.id)}
+              onClick={() => selectedUser && liftSuspensionMutation.mutate({
+                userId: selectedUser.id,
+                targetEmail: selectedUser.email,
+              })}
               disabled={liftSuspensionMutation.isPending}
               className="gap-2"
             >
@@ -699,6 +704,7 @@ const SuspendedUsers = () => {
                 selectedUser &&
                 editSuspensionMutation.mutate({
                   userId: selectedUser.id,
+                  targetEmail: selectedUser.email,
                   duration: newDuration,
                   reason: newReason,
                 })

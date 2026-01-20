@@ -16,7 +16,11 @@ export type AuditAction =
   | "team_invite_accepted"
   | "team_invite_deleted"
   | "profile_updated"
-  | "password_changed";
+  | "password_changed"
+  | "user_suspended"
+  | "user_blocked"
+  | "suspension_lifted"
+  | "suspension_modified";
 
 export type AuditEntityType =
   | "user_role"
@@ -25,7 +29,8 @@ export type AuditEntityType =
   | "auth"
   | "settings"
   | "team_invite"
-  | "profile";
+  | "profile"
+  | "user_suspension";
 
 interface AuditLogParams {
   action: AuditAction;
@@ -41,6 +46,9 @@ const CRITICAL_EVENTS: AuditAction[] = [
   "role_removed",
   "data_exported",
   "data_imported",
+  "user_suspended",
+  "user_blocked",
+  "suspension_lifted",
 ];
 
 const sendSecurityAlert = async (
@@ -212,6 +220,32 @@ export const useAuditLogger = () => {
     [logAuditEvent]
   );
 
+  const logSuspension = useCallback(
+    async (
+      action: "user_suspended" | "user_blocked" | "suspension_lifted" | "suspension_modified",
+      targetUserId: string,
+      targetEmail: string,
+      suspensionDuration?: string,
+      suspensionReason?: string,
+      suspendedUntil?: string
+    ) => {
+      await logAuditEvent({
+        action,
+        entityType: "user_suspension",
+        entityId: targetUserId,
+        details: {
+          target_user_id: targetUserId,
+          target_email: targetEmail,
+          suspension_duration: suspensionDuration,
+          suspension_reason: suspensionReason,
+          suspended_until: suspendedUntil,
+          timestamp: new Date().toISOString(),
+        },
+      });
+    },
+    [logAuditEvent]
+  );
+
   return {
     logAuditEvent,
     logRoleChange,
@@ -219,5 +253,6 @@ export const useAuditLogger = () => {
     logDataImport,
     logSettingsChange,
     logTeamInvite,
+    logSuspension,
   };
 };

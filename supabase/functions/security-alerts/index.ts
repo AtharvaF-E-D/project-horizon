@@ -11,7 +11,7 @@ const corsHeaders = {
 };
 
 interface SecurityAlertRequest {
-  event_type: "role_changed" | "role_assigned" | "role_removed" | "data_exported" | "data_imported" | "suspicious_login" | "rate_limit_warning" | "rate_limit_exceeded";
+  event_type: "role_changed" | "role_assigned" | "role_removed" | "data_exported" | "data_imported" | "suspicious_login" | "rate_limit_warning" | "rate_limit_exceeded" | "user_suspended" | "user_blocked" | "suspension_lifted";
   details: {
     actor_email?: string;
     target_email?: string;
@@ -27,6 +27,9 @@ interface SecurityAlertRequest {
     max_requests?: number;
     percentage?: number;
     window_minutes?: number;
+    suspension_duration?: string;
+    suspension_reason?: string;
+    suspended_until?: string;
   };
 }
 
@@ -40,6 +43,9 @@ const getEmailSubject = (eventType: string): string => {
     suspicious_login: "⚠️ Security Alert: Suspicious Login Attempt",
     rate_limit_warning: "⚡ Rate Limit Warning: User Approaching Limit",
     rate_limit_exceeded: "🚫 Rate Limit Exceeded: User Blocked",
+    user_suspended: "⏸️ User Account Suspended",
+    user_blocked: "🚫 User Account Permanently Blocked",
+    suspension_lifted: "✅ User Suspension Lifted",
   };
   return subjects[eventType] || "🔐 Security Alert";
 };
@@ -228,6 +234,82 @@ const getEmailContent = (eventType: string, details: SecurityAlertRequest["detai
         </table>
         <p style="color: #dc2626; background: #fee2e2; padding: 12px; border-radius: 4px; margin-top: 16px;">
           🔒 This user is temporarily blocked from performing this action. You can manually reset their limit from the Rate Limits dashboard if needed.
+        </p>
+      `;
+      break;
+
+    case "user_suspended":
+      content += `
+        <h2 style="color: #f59e0b; margin-top: 0;">⏸️ User Account Suspended</h2>
+        <p style="color: #475569;">A user account has been temporarily suspended.</p>
+        <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+          <tr style="background: #fef3c7;">
+            <td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 600;">Suspended By</td>
+            <td style="padding: 12px; border: 1px solid #e2e8f0;">${details.actor_email || "Unknown"}</td>
+          </tr>
+          <tr>
+            <td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 600;">Suspended User</td>
+            <td style="padding: 12px; border: 1px solid #e2e8f0;">${details.target_email || "Unknown"}</td>
+          </tr>
+          <tr style="background: #f1f5f9;">
+            <td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 600;">Duration</td>
+            <td style="padding: 12px; border: 1px solid #e2e8f0;"><span style="background: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 4px;">${details.suspension_duration || "Unknown"}</span></td>
+          </tr>
+          <tr>
+            <td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 600;">Suspended Until</td>
+            <td style="padding: 12px; border: 1px solid #e2e8f0;">${details.suspended_until ? new Date(details.suspended_until).toLocaleString() : "N/A"}</td>
+          </tr>
+          <tr style="background: #f1f5f9;">
+            <td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 600;">Reason</td>
+            <td style="padding: 12px; border: 1px solid #e2e8f0;">${details.suspension_reason || "No reason provided"}</td>
+          </tr>
+        </table>
+        <p style="color: #92400e; background: #fef3c7; padding: 12px; border-radius: 4px; margin-top: 16px;">
+          ⏸️ This user will be unable to access the system until the suspension expires or is lifted manually.
+        </p>
+      `;
+      break;
+
+    case "user_blocked":
+      content += `
+        <h2 style="color: #dc2626; margin-top: 0;">🚫 User Account Permanently Blocked</h2>
+        <p style="color: #475569;">A user account has been permanently blocked from the system.</p>
+        <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+          <tr style="background: #fee2e2;">
+            <td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 600;">Blocked By</td>
+            <td style="padding: 12px; border: 1px solid #e2e8f0;">${details.actor_email || "Unknown"}</td>
+          </tr>
+          <tr>
+            <td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 600;">Blocked User</td>
+            <td style="padding: 12px; border: 1px solid #e2e8f0;">${details.target_email || "Unknown"}</td>
+          </tr>
+          <tr style="background: #f1f5f9;">
+            <td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 600;">Reason</td>
+            <td style="padding: 12px; border: 1px solid #e2e8f0;">${details.suspension_reason || "No reason provided"}</td>
+          </tr>
+        </table>
+        <p style="color: #dc2626; background: #fee2e2; padding: 12px; border-radius: 4px; margin-top: 16px;">
+          🚫 This user has been permanently blocked and will not be able to access the system. The block must be manually removed by an administrator.
+        </p>
+      `;
+      break;
+
+    case "suspension_lifted":
+      content += `
+        <h2 style="color: #16a34a; margin-top: 0;">✅ User Suspension Lifted</h2>
+        <p style="color: #475569;">A user's suspension has been lifted and their access has been restored.</p>
+        <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+          <tr style="background: #dcfce7;">
+            <td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 600;">Lifted By</td>
+            <td style="padding: 12px; border: 1px solid #e2e8f0;">${details.actor_email || "Unknown"}</td>
+          </tr>
+          <tr>
+            <td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: 600;">User</td>
+            <td style="padding: 12px; border: 1px solid #e2e8f0;">${details.target_email || "Unknown"}</td>
+          </tr>
+        </table>
+        <p style="color: #166534; background: #dcfce7; padding: 12px; border-radius: 4px; margin-top: 16px;">
+          ✅ This user can now log in and access the system normally.
         </p>
       `;
       break;

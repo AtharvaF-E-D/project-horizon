@@ -35,6 +35,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { useAuditLogger } from "@/hooks/useAuditLogger";
 
 interface SecurityAuditLog {
   id: string;
@@ -94,6 +95,7 @@ const getSuspensionEndDate = (duration: SuspensionDuration): Date | null => {
 
 export const TopOffendersWidget = ({ logs }: TopOffendersWidgetProps) => {
   const { user } = useAuth();
+  const { logSuspension } = useAuditLogger();
   const queryClient = useQueryClient();
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
   const [selectedOffender, setSelectedOffender] = useState<OffenderData | null>(null);
@@ -103,10 +105,12 @@ export const TopOffendersWidget = ({ logs }: TopOffendersWidgetProps) => {
   const suspendUserMutation = useMutation({
     mutationFn: async ({
       userId,
+      targetEmail,
       duration,
       reason,
     }: {
       userId: string;
+      targetEmail: string;
       duration: SuspensionDuration;
       reason: string;
     }) => {
@@ -124,24 +128,15 @@ export const TopOffendersWidget = ({ logs }: TopOffendersWidgetProps) => {
 
       if (error) throw error;
 
-      // Log the suspension in audit logs
-      const { error: auditError } = await supabase.from("audit_logs").insert({
-        user_id: user?.id || "",
-        user_email: user?.email || null,
-        action: isPermanent ? "user_blocked" : "user_suspended",
-        entity_type: "user_suspension",
-        entity_id: userId,
-        details: {
-          target_user_id: userId,
-          duration,
-          reason,
-          suspended_until: endDate?.toISOString() || "permanent",
-        },
-      });
-
-      if (auditError) {
-        console.error("Failed to log suspension:", auditError);
-      }
+      // Log and send email notification
+      await logSuspension(
+        isPermanent ? "user_blocked" : "user_suspended",
+        userId,
+        targetEmail,
+        duration,
+        reason || `Rate limit violations - ${duration} suspension`,
+        endDate?.toISOString() || "permanent"
+      );
 
       return { userId, duration, isPermanent };
     },
@@ -152,6 +147,7 @@ export const TopOffendersWidget = ({ logs }: TopOffendersWidgetProps) => {
           : `User suspended for ${data.duration}`
       );
       queryClient.invalidateQueries({ queryKey: ["all-profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["suspended-users"] });
       setSuspendDialogOpen(false);
       setSelectedOffender(null);
       setSuspensionReason("");
@@ -318,6 +314,7 @@ export const TopOffendersWidget = ({ logs }: TopOffendersWidgetProps) => {
     if (!selectedOffender) return;
     suspendUserMutation.mutate({
       userId: selectedOffender.userId,
+      targetEmail: selectedOffender.email,
       duration: suspensionDuration,
       reason: suspensionReason,
     });
