@@ -75,12 +75,46 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
+
+      // Check if user is suspended
+      if (data.user) {
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("suspended_until, suspension_reason")
+          .eq("id", data.user.id)
+          .single();
+
+        if (profileError) {
+          console.error("Error checking suspension status:", profileError);
+        } else if (profile?.suspended_until) {
+          const suspendedUntil = new Date(profile.suspended_until);
+          const now = new Date();
+
+          if (suspendedUntil > now) {
+            // User is suspended - sign them out and show error
+            await supabase.auth.signOut();
+            
+            const isPermanent = suspendedUntil.getFullYear() > 2099;
+            const timeRemaining = isPermanent 
+              ? "permanently" 
+              : `until ${suspendedUntil.toLocaleString()}`;
+            
+            toast({
+              title: "Account Suspended",
+              description: `Your account has been suspended ${timeRemaining}. ${profile.suspension_reason ? `Reason: ${profile.suspension_reason}` : ""}`,
+              variant: "destructive",
+            });
+            setLoading(false);
+            return;
+          }
+        }
+      }
 
       navigate("/dashboard");
     } catch (error: any) {
