@@ -3,8 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useAuditLogger } from "@/hooks/useAuditLogger";
+import { useSuspensionHistory } from "@/hooks/useSuspensionHistory";
 import { DashboardNavbar } from "@/components/layout/DashboardNavbar";
 import { DashboardNav } from "@/components/layout/DashboardNav";
+import { SuspensionHistoryDialog } from "@/components/suspension/SuspensionHistoryDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -48,6 +50,7 @@ import {
   Calendar,
   Timer,
   Edit,
+  History,
 } from "lucide-react";
 import { format, formatDistanceToNow, differenceInSeconds, isPast } from "date-fns";
 import { useState, useMemo, useEffect } from "react";
@@ -96,11 +99,13 @@ const SuspendedUsers = () => {
   const { user } = useAuth();
   const { permissions, loading: rolesLoading } = useUserRole();
   const { logSuspension } = useAuditLogger();
+  const { logSuspensionEvent } = useSuspensionHistory();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<"all" | "temporary" | "permanent">("all");
   const [liftDialogOpen, setLiftDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<SuspendedUser | null>(null);
   const [newDuration, setNewDuration] = useState<SuspensionDuration>("24h");
   const [newReason, setNewReason] = useState("");
@@ -159,6 +164,13 @@ const SuspendedUsers = () => {
         targetEmail
       );
 
+      // Log to suspension history
+      await logSuspensionEvent({
+        targetUserId: userId,
+        action: "lifted",
+        reason: "Suspension lifted by admin",
+      });
+
       return { userId, targetEmail };
     },
     onSuccess: () => {
@@ -208,6 +220,15 @@ const SuspendedUsers = () => {
         reason,
         endDate?.toISOString() || "permanent"
       );
+
+      // Log to suspension history
+      await logSuspensionEvent({
+        targetUserId: userId,
+        action: isPermanent ? "blocked" : "modified",
+        suspendedUntil: endDate?.toISOString() || null,
+        reason,
+        metadata: { duration, previous_reason: null },
+      });
 
       return { userId, duration };
     },
@@ -326,6 +347,11 @@ const SuspendedUsers = () => {
     setNewReason(user.suspension_reason || "");
     setNewDuration("24h");
     setEditDialogOpen(true);
+  };
+
+  const handleHistoryClick = (user: SuspendedUser) => {
+    setSelectedUser(user);
+    setHistoryDialogOpen(true);
   };
 
   if (rolesLoading) {
@@ -532,6 +558,15 @@ const SuspendedUsers = () => {
                             <TableCell>
                               <div className="flex items-center gap-2">
                                 <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleHistoryClick(suspendedUser)}
+                                  className="gap-1"
+                                  title="View suspension history"
+                                >
+                                  <History className="w-3.5 h-3.5" />
+                                </Button>
+                                <Button
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleEditClick(suspendedUser)}
@@ -727,6 +762,17 @@ const SuspendedUsers = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Suspension History Dialog */}
+      {selectedUser && (
+        <SuspensionHistoryDialog
+          open={historyDialogOpen}
+          onOpenChange={setHistoryDialogOpen}
+          userId={selectedUser.id}
+          userEmail={selectedUser.email}
+          userName={selectedUser.full_name}
+        />
+      )}
     </div>
   );
 };

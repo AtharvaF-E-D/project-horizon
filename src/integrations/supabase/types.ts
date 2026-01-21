@@ -797,6 +797,42 @@ export type Database = {
         }
         Relationships: []
       }
+      suspension_history: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          performed_by: string
+          performed_by_email: string | null
+          reason: string | null
+          suspended_until: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          performed_by: string
+          performed_by_email?: string | null
+          reason?: string | null
+          suspended_until?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          performed_by?: string
+          performed_by_email?: string | null
+          reason?: string | null
+          suspended_until?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           assigned_to: string | null
