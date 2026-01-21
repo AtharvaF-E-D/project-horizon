@@ -36,6 +36,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuditLogger } from "@/hooks/useAuditLogger";
+import { useSuspensionHistory } from "@/hooks/useSuspensionHistory";
 
 interface SecurityAuditLog {
   id: string;
@@ -96,6 +97,7 @@ const getSuspensionEndDate = (duration: SuspensionDuration): Date | null => {
 export const TopOffendersWidget = ({ logs }: TopOffendersWidgetProps) => {
   const { user } = useAuth();
   const { logSuspension } = useAuditLogger();
+  const { logSuspensionEvent } = useSuspensionHistory();
   const queryClient = useQueryClient();
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
   const [selectedOffender, setSelectedOffender] = useState<OffenderData | null>(null);
@@ -137,6 +139,15 @@ export const TopOffendersWidget = ({ logs }: TopOffendersWidgetProps) => {
         reason || `Rate limit violations - ${duration} suspension`,
         endDate?.toISOString() || "permanent"
       );
+
+      // Log to suspension history
+      await logSuspensionEvent({
+        targetUserId: userId,
+        action: isPermanent ? "blocked" : "suspended",
+        suspendedUntil: endDate?.toISOString() || null,
+        reason: reason || `Rate limit violations - ${duration} suspension`,
+        metadata: { source: "rate_limit_violations", duration },
+      });
 
       return { userId, duration, isPermanent };
     },
