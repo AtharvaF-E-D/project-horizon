@@ -40,6 +40,7 @@ import DataImportExport from "./pages/DataImportExport";
 import RoleManagement from "./pages/RoleManagement";
 import RateLimitDashboard from "./pages/RateLimitDashboard";
 import SuspendedUsers from "./pages/SuspendedUsers";
+import SuspensionStats from "./pages/SuspensionStats";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -92,6 +93,7 @@ const App = () => (
           <Route path="/roles" element={<RoleManagement />} />
           <Route path="/rate-limits" element={<RateLimitDashboard />} />
           <Route path="/suspended-users" element={<SuspendedUsers />} />
+          <Route path="/suspension-stats" element={<SuspensionStats />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
