@@ -22,6 +22,7 @@ import {
   FileSpreadsheet,
   Gauge,
   UserX,
+  BarChart2,
   LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -55,6 +56,7 @@ const navItems: NavItem[] = [
   { icon: FileSpreadsheet, label: "Import/Export", path: "/data-import-export", permissionKey: "dataImportExport" },
   { icon: Gauge, label: "Rate Limits", path: "/rate-limits", permissionKey: "rateLimits" },
   { icon: UserX, label: "Suspended Users", path: "/suspended-users", permissionKey: "suspendedUsers" },
+  { icon: BarChart2, label: "Suspension Stats", path: "/suspension-stats", permissionKey: "suspendedUsers" },
   { icon: MessageCircle, label: "WhatsApp", path: "/whatsapp", permissionKey: "whatsapp" },
   { icon: Phone, label: "Calls", path: "/calls", permissionKey: "calls" },
   { icon: BarChart3, label: "Reports", path: "/reports", permissionKey: "reports" },
