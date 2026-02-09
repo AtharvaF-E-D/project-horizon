@@ -48,8 +48,19 @@ import {
   Users,
   Activity,
   ExternalLink,
+  Download,
+  FileText,
+  FileSpreadsheet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { exportStatsAsCSV, exportStatsAsPDF } from "@/utils/suspensionExport";
+import { toast } from "sonner";
 
 const COLORS = [
   "hsl(var(--chart-1))",
@@ -134,6 +145,34 @@ const SuspensionStats = () => {
                   <SelectItem value="90">Last 90 days</SelectItem>
                 </SelectContent>
               </Select>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" disabled={isLoading}>
+                    <Download className="w-4 h-4 mr-2" />
+                    Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => {
+                      exportStatsAsCSV(stats, timeRange);
+                      toast.success("CSV report downloaded");
+                    }}
+                  >
+                    <FileSpreadsheet className="w-4 h-4 mr-2" />
+                    Download CSV
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={async () => {
+                      await exportStatsAsPDF(stats, timeRange);
+                      toast.success("PDF report downloaded");
+                    }}
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Download PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button variant="outline" asChild>
                 <Link to="/suspended-users">
                   <UserX className="w-4 h-4 mr-2" />
