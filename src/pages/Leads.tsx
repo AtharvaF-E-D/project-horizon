@@ -81,7 +81,7 @@ const Leads = () => {
               <h1 className="text-3xl font-bold">Leads</h1>
               <p className="text-muted-foreground">Manage and track your sales leads</p>
             </div>
-            <PermissionGate permission="canDeleteRecords">
+            <PermissionGate permission="leads">
               <Button onClick={() => navigate("/leads/new")} className="gap-2">
                 <Plus className="w-4 h-4" />
                 Add Lead
