@@ -8,17 +8,21 @@ import { Input } from "@/components/ui/input";
 import { DashboardNav } from "@/components/layout/DashboardNav";
 import { DashboardNavbar } from "@/components/layout/DashboardNavbar";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Plus, Mail, Phone, Building, TrendingUp, Users, Target } from "lucide-react";
 import { PermissionGate } from "@/components/common/PermissionGate";
 import { useUserRole } from "@/hooks/useUserRole";
+import { LeadsBulkActions } from "@/components/leads/LeadsBulkActions";
 
 const Leads = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const { permissions } = useUserRole();
+
   const { data: leads, isLoading } = useQuery({
     queryKey: ["leads", statusFilter, sourceFilter],
     queryFn: async () => {
@@ -52,27 +56,44 @@ const Leads = () => {
 
   const stats = {
     total: leads?.length || 0,
-    new: leads?.filter(l => l.status === "new").length || 0,
-    qualified: leads?.filter(l => l.status === "qualified").length || 0,
-    converted: leads?.filter(l => l.status === "converted").length || 0,
+    new: leads?.filter((l) => l.status === "new").length || 0,
+    qualified: leads?.filter((l) => l.status === "qualified").length || 0,
+    converted: leads?.filter((l) => l.status === "converted").length || 0,
   };
 
   const getStatusColor = (status: string) => {
-    const colors = {
+    const colors: Record<string, string> = {
       new: "bg-blue-500/10 text-blue-500",
       contacted: "bg-purple-500/10 text-purple-500",
       qualified: "bg-green-500/10 text-green-500",
       unqualified: "bg-red-500/10 text-red-500",
       converted: "bg-emerald-500/10 text-emerald-500",
     };
-    return colors[status as keyof typeof colors] || "bg-muted text-muted-foreground";
+    return colors[status] || "bg-muted text-muted-foreground";
   };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (!filteredLeads) return;
+    if (selectedIds.length === filteredLeads.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredLeads.map((l) => l.id));
+    }
+  };
+
+  const allSelected = filteredLeads && filteredLeads.length > 0 && selectedIds.length === filteredLeads.length;
 
   return (
     <div className="min-h-screen bg-background">
       <DashboardNavbar />
       <DashboardNav />
-      
+
       <main className="ml-64 pt-20 p-8">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Header */}
@@ -184,53 +205,83 @@ const Leads = () => {
             </CardContent>
           </Card>
 
+          {/* Select All */}
+          {filteredLeads && filteredLeads.length > 0 && (
+            <div className="flex items-center gap-2 px-1">
+              <Checkbox
+                checked={allSelected}
+                onCheckedChange={toggleSelectAll}
+              />
+              <span className="text-sm text-muted-foreground">
+                Select all ({filteredLeads.length})
+              </span>
+            </div>
+          )}
+
           {/* Leads List */}
           <div className="grid gap-4">
             {isLoading ? (
-              <Card><CardContent className="p-8 text-center">Loading leads...</CardContent></Card>
+              <Card>
+                <CardContent className="p-8 text-center">Loading leads...</CardContent>
+              </Card>
             ) : filteredLeads && filteredLeads.length > 0 ? (
               filteredLeads.map((lead) => (
-                <Card 
-                  key={lead.id} 
-                  className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => navigate(`/leads/${lead.id}`)}
+                <Card
+                  key={lead.id}
+                  className={`cursor-pointer hover:shadow-md transition-shadow ${
+                    selectedIds.includes(lead.id) ? "ring-2 ring-primary" : ""
+                  }`}
                 >
                   <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-2 flex-1">
-                        <div className="flex items-center gap-3">
-                          <h3 className="text-lg font-semibold">
-                            {lead.first_name} {lead.last_name}
-                          </h3>
-                          <Badge className={getStatusColor(lead.status)}>
-                            {lead.status}
-                          </Badge>
-                          <Badge variant="outline">{lead.source}</Badge>
-                        </div>
-                        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                          {lead.company && (
-                            <div className="flex items-center gap-1">
-                              <Building className="w-4 h-4" />
-                              {lead.company}
-                            </div>
-                          )}
-                          {lead.email && (
-                            <div className="flex items-center gap-1">
-                              <Mail className="w-4 h-4" />
-                              {lead.email}
-                            </div>
-                          )}
-                          {lead.phone && (
-                            <div className="flex items-center gap-1">
-                              <Phone className="w-4 h-4" />
-                              {lead.phone}
-                            </div>
-                          )}
-                        </div>
+                    <div className="flex items-start gap-4">
+                      <div
+                        className="pt-1"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Checkbox
+                          checked={selectedIds.includes(lead.id)}
+                          onCheckedChange={() => toggleSelect(lead.id)}
+                        />
                       </div>
-                      <div className="text-right">
-                        <div className="text-sm text-muted-foreground">Score</div>
-                        <div className="text-2xl font-bold text-primary">{lead.score}</div>
+                      <div
+                        className="flex items-start justify-between flex-1"
+                        onClick={() => navigate(`/leads/${lead.id}`)}
+                      >
+                        <div className="space-y-2 flex-1">
+                          <div className="flex items-center gap-3">
+                            <h3 className="text-lg font-semibold">
+                              {lead.first_name} {lead.last_name}
+                            </h3>
+                            <Badge className={getStatusColor(lead.status)}>
+                              {lead.status}
+                            </Badge>
+                            <Badge variant="outline">{lead.source}</Badge>
+                          </div>
+                          <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                            {lead.company && (
+                              <div className="flex items-center gap-1">
+                                <Building className="w-4 h-4" />
+                                {lead.company}
+                              </div>
+                            )}
+                            {lead.email && (
+                              <div className="flex items-center gap-1">
+                                <Mail className="w-4 h-4" />
+                                {lead.email}
+                              </div>
+                            )}
+                            {lead.phone && (
+                              <div className="flex items-center gap-1">
+                                <Phone className="w-4 h-4" />
+                                {lead.phone}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm text-muted-foreground">Score</div>
+                          <div className="text-2xl font-bold text-primary">{lead.score}</div>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -246,6 +297,15 @@ const Leads = () => {
           </div>
         </div>
       </main>
+
+      {/* Bulk Actions Bar */}
+      {selectedIds.length > 0 && leads && (
+        <LeadsBulkActions
+          selectedIds={selectedIds}
+          leads={leads}
+          onClearSelection={() => setSelectedIds([])}
+        />
+      )}
     </div>
   );
 };
