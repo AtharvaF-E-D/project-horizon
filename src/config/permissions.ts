@@ -36,6 +36,12 @@ export interface RolePermissions {
   roles: boolean;
   team: boolean;
   settings: boolean;
+  invoices: boolean;
+  proposals: boolean;
+  socialMedia: boolean;
+  ecommerce: boolean;
+  helpSupport: boolean;
+  voiceNotes: boolean;
   
   // Feature permissions
   canManageRoles: boolean;
@@ -82,6 +88,12 @@ const OWNER_PERMISSIONS: RolePermissions = {
   canEditSettings: true,
   canCreateCampaigns: true,
   canSendEmails: true,
+  invoices: true,
+  proposals: true,
+  socialMedia: true,
+  ecommerce: true,
+  helpSupport: true,
+  voiceNotes: true,
 };
 
 const ADMIN_PERMISSIONS: RolePermissions = {
@@ -122,6 +134,12 @@ const MANAGER_PERMISSIONS: RolePermissions = {
   canEditSettings: false,
   canCreateCampaigns: true,
   canSendEmails: true,
+  invoices: true,
+  proposals: true,
+  socialMedia: true,
+  ecommerce: true,
+  helpSupport: true,
+  voiceNotes: true,
 };
 
 const AGENT_PERMISSIONS: RolePermissions = {
@@ -158,6 +176,12 @@ const AGENT_PERMISSIONS: RolePermissions = {
   canEditSettings: false,
   canCreateCampaigns: false,
   canSendEmails: false,
+  invoices: true,
+  proposals: false,
+  socialMedia: false,
+  ecommerce: false,
+  helpSupport: true,
+  voiceNotes: true,
 };
 
 const VIEWER_PERMISSIONS: RolePermissions = {
@@ -194,6 +218,12 @@ const VIEWER_PERMISSIONS: RolePermissions = {
   canEditSettings: false,
   canCreateCampaigns: false,
   canSendEmails: false,
+  invoices: true,
+  proposals: false,
+  socialMedia: false,
+  ecommerce: true,
+  helpSupport: true,
+  voiceNotes: false,
 };
 
 export const ROLE_PERMISSIONS: Record<AppRole, RolePermissions> = {
@@ -236,4 +266,10 @@ export const ROUTE_PERMISSIONS: Record<string, keyof RolePermissions> = {
   "/roles": "roles",
   "/team": "team",
   "/settings": "settings",
+  "/invoices": "invoices",
+  "/proposals": "proposals",
+  "/social-media": "socialMedia",
+  "/ecommerce": "ecommerce",
+  "/help": "helpSupport",
+  "/voice-notes": "voiceNotes",
 };

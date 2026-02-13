@@ -24,6 +24,12 @@ import {
   UserX,
   BarChart2,
   LucideIcon,
+  Receipt,
+  FileText,
+  Share2,
+  ShoppingCart,
+  HelpCircle,
+  Mic,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -62,7 +68,13 @@ const navItems: NavItem[] = [
   { icon: BarChart3, label: "Reports", path: "/reports", permissionKey: "reports" },
   { icon: BarChart3, label: "Analytics", path: "/analytics", permissionKey: "analytics" },
   { icon: Bot, label: "AI Assistant", path: "/ai-assistant", permissionKey: "aiAssistant" },
+  { icon: Receipt, label: "Invoices", path: "/invoices", permissionKey: "invoices" },
+  { icon: FileText, label: "Proposals", path: "/proposals", permissionKey: "proposals" },
+  { icon: Share2, label: "Social Media", path: "/social-media", permissionKey: "socialMedia" },
+  { icon: ShoppingCart, label: "E-commerce", path: "/ecommerce", permissionKey: "ecommerce" },
+  { icon: Mic, label: "Voice Notes", path: "/voice-notes", permissionKey: "voiceNotes" },
   { icon: Shield, label: "Roles", path: "/roles", permissionKey: "roles" },
+  { icon: HelpCircle, label: "Help & Support", path: "/help", permissionKey: "helpSupport" },
 ];
 
 export const DashboardNav = () => {
