@@ -41,6 +41,12 @@ import RoleManagement from "./pages/RoleManagement";
 import RateLimitDashboard from "./pages/RateLimitDashboard";
 import SuspendedUsers from "./pages/SuspendedUsers";
 import SuspensionStats from "./pages/SuspensionStats";
+import Invoices from "./pages/Invoices";
+import Proposals from "./pages/Proposals";
+import SocialMedia from "./pages/SocialMedia";
+import EcommerceInsights from "./pages/EcommerceInsights";
+import HelpSupport from "./pages/HelpSupport";
+import VoiceNotes from "./pages/VoiceNotes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -94,6 +100,12 @@ const App = () => (
           <Route path="/rate-limits" element={<RateLimitDashboard />} />
           <Route path="/suspended-users" element={<SuspendedUsers />} />
           <Route path="/suspension-stats" element={<SuspensionStats />} />
+          <Route path="/invoices" element={<Invoices />} />
+          <Route path="/proposals" element={<Proposals />} />
+          <Route path="/social-media" element={<SocialMedia />} />
+          <Route path="/ecommerce" element={<EcommerceInsights />} />
+          <Route path="/help" element={<HelpSupport />} />
+          <Route path="/voice-notes" element={<VoiceNotes />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

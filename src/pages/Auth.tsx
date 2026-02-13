@@ -132,8 +132,8 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">Welcome to SalesCRM</h1>
-          <p className="text-muted-foreground">Manage your sales pipeline efficiently</p>
+          <h1 className="text-3xl font-bold mb-2">Welcome to SIMPLIFY</h1>
+          <p className="text-muted-foreground">Your AI-powered CRM platform</p>
         </div>
 
         <Tabs defaultValue="signin" className="w-full">
