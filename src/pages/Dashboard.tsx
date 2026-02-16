@@ -24,18 +24,18 @@ const Dashboard = () => {
       <DashboardNavbar />
       <DashboardNav />
       
-      <main className="ml-64 pt-20 p-8">
+      <main className="ml-64 pt-20 p-4 md:p-8">
         <div className="max-w-7xl mx-auto space-y-8">
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h1 className="font-heading text-3xl font-bold mb-2">Dashboard</h1>
+              <h1 className="font-heading text-2xl md:text-3xl font-bold mb-2">Dashboard</h1>
               <p className="text-muted-foreground">Welcome back! Here's what's happening today.</p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input placeholder="Search..." className="pl-10 w-64" />
+                <Input placeholder="Search..." className="pl-10 w-full sm:w-64" />
               </div>
               <Button className="gradient-primary text-primary-foreground">
                 <Plus className="w-4 h-4 mr-2" />
