@@ -187,7 +187,7 @@ const Pipeline = () => {
       <DashboardNavbar />
       <DashboardNav />
       
-      <main className="ml-64 pt-20 p-8">
+      <main className="ml-64 pt-20 p-4 md:p-8">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between">
@@ -207,7 +207,7 @@ const Pipeline = () => {
           </div>
 
           {/* Pipeline Stats */}
-          <div className="grid grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {stages.map((stage) => {
               const stageDeals = getDealsByStage(stage.id);
               const totalValue = stageDeals.reduce((sum, deal) => sum + (deal.value || 0), 0);

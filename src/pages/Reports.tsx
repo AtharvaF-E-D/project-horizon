@@ -43,9 +43,9 @@ export default function Reports() {
       <main className="ml-64 pt-20 p-8">
         <div className="max-w-7xl mx-auto space-y-8">
           {/* Header */}
-          <div className="flex justify-between items-start">
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              <h1 className="text-2xl md:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                 Reports & Analytics
               </h1>
               <p className="text-muted-foreground mt-2">

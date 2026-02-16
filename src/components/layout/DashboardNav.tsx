@@ -1,40 +1,17 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
-  LayoutDashboard,
-  Users,
-  TrendingUp,
-  MessageCircle,
-  Phone,
-  BarChart3,
-  Building2,
-  UserCircle,
-  DollarSign,
-  Bot,
-  CheckSquare,
-  Megaphone,
-  Activity,
-  Mail,
-  PieChart,
-  Filter,
-  Workflow,
-  Shield,
-  FileSpreadsheet,
-  Gauge,
-  UserX,
-  BarChart2,
-  LucideIcon,
-  Receipt,
-  FileText,
-  Share2,
-  ShoppingCart,
-  HelpCircle,
-  Mic,
+  LayoutDashboard, Users, TrendingUp, MessageCircle, Phone,
+  BarChart3, Building2, UserCircle, DollarSign, Bot, CheckSquare,
+  Megaphone, Activity, Mail, PieChart, Filter, Workflow, Shield,
+  FileSpreadsheet, Gauge, UserX, BarChart2, LucideIcon, Receipt,
+  FileText, Share2, ShoppingCart, HelpCircle, Mic,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserRole } from "@/hooks/useUserRole";
 import { RolePermissions } from "@/config/permissions";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface NavItem {
   icon: LucideIcon;
@@ -77,44 +54,61 @@ const navItems: NavItem[] = [
   { icon: HelpCircle, label: "Help & Support", path: "/help", permissionKey: "helpSupport" },
 ];
 
-export const DashboardNav = () => {
+interface DashboardNavProps {
+  mobile?: boolean;
+  onNavigate?: () => void;
+}
+
+export const DashboardNav = ({ mobile, onNavigate }: DashboardNavProps) => {
   const location = useLocation();
   const { permissions, loading } = useUserRole();
 
   const visibleItems = navItems.filter(item => permissions[item.permissionKey]);
 
+  const navContent = (
+    <div className="p-4 space-y-1">
+      {loading ? (
+        Array.from({ length: 8 }).map((_, i) => (
+          <Skeleton key={i} className="h-10 w-full" />
+        ))
+      ) : (
+        visibleItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = location.pathname === item.path;
+          
+          return (
+            <Button
+              key={item.path}
+              variant={isActive ? "secondary" : "ghost"}
+              className={cn(
+                "w-full justify-start gap-3 transition-smooth",
+                isActive && "bg-primary/10 text-primary hover:bg-primary/15"
+              )}
+              asChild
+              onClick={onNavigate}
+            >
+              <Link to={item.path}>
+                <Icon className="w-4 h-4" />
+                <span>{item.label}</span>
+              </Link>
+            </Button>
+          );
+        })
+      )}
+    </div>
+  );
+
+  if (mobile) {
+    return (
+      <ScrollArea className="h-[calc(100vh-2rem)]">
+        {navContent}
+      </ScrollArea>
+    );
+  }
+
   return (
-    <aside className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 border-r border-border bg-card overflow-y-auto">
-      <div className="p-4 space-y-1">
-        {loading ? (
-          // Show skeleton while loading permissions
-          Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-10 w-full" />
-          ))
-        ) : (
-          visibleItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            
-            return (
-              <Button
-                key={item.path}
-                variant={isActive ? "secondary" : "ghost"}
-                className={cn(
-                  "w-full justify-start gap-3 transition-smooth",
-                  isActive && "bg-primary/10 text-primary hover:bg-primary/15"
-                )}
-                asChild
-              >
-                <Link to={item.path}>
-                  <Icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                </Link>
-              </Button>
-            );
-          })
-        )}
-      </div>
+    <aside className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 border-r border-border bg-card overflow-y-auto hidden md:block">
+      {navContent}
     </aside>
   );
 };
