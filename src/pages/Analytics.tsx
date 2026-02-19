@@ -249,7 +249,7 @@ const Analytics = () => {
       <DashboardNavbar />
       <div className="flex">
         <DashboardNav />
-        <main className="flex-1 p-8 ml-64 pt-20">
+        <main className="flex-1 p-4 md:p-8 pt-20 ml-64 md:ml-64">
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2">Analytics Dashboard</h1>
             <p className="text-muted-foreground">

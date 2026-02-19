@@ -34,7 +34,7 @@ const Settings = () => {
       <DashboardNavbar />
       <div className="flex">
         <DashboardNav />
-        <main className="flex-1 p-8 ml-64">
+        <main className="flex-1 p-8 pt-20 ml-64 md:ml-64">
           <div className="max-w-4xl">
             <div className="mb-8">
               <h1 className="text-3xl font-bold mb-2">Settings</h1>
