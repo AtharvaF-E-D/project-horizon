@@ -252,9 +252,9 @@ export default function WhatsApp() {
           </div>
 
           {/* Main Chat Interface */}
-          <div className="grid grid-cols-12 gap-6 h-[calc(100vh-250px)]">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-auto md:h-[calc(100vh-250px)]">
             {/* Conversations List */}
-            <Card className="col-span-4 flex flex-col">
+            <Card className="md:col-span-4 flex flex-col h-80 md:h-auto">
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-2">
                   <MessageCircle className="w-5 h-5" />
@@ -317,7 +317,7 @@ export default function WhatsApp() {
             </Card>
 
             {/* Chat Area */}
-            <Card className="col-span-8 flex flex-col">
+            <Card className="md:col-span-8 flex flex-col h-96 md:h-auto">
               {/* Chat Header */}
               <CardHeader className="border-b py-4">
                 <div className="flex justify-between items-center">

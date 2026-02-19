@@ -4,8 +4,10 @@ import { DashboardNav } from "@/components/layout/DashboardNav";
 import { DashboardNavbar } from "@/components/layout/DashboardNavbar";
 import { TrendingUp, Users, Target, DollarSign, Plus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const stats = [
     { label: "Total Leads", value: "1,234", change: "+12%", icon: Users, color: "text-primary" },
     { label: "Active Deals", value: "56", change: "+8%", icon: Target, color: "text-secondary" },
@@ -37,7 +39,7 @@ const Dashboard = () => {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input placeholder="Search..." className="pl-10 w-full sm:w-64" />
               </div>
-              <Button className="gradient-primary text-primary-foreground">
+              <Button className="gradient-primary text-primary-foreground" onClick={() => navigate('/leads/new')}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add Lead
               </Button>

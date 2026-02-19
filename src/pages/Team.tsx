@@ -398,7 +398,7 @@ const Team = () => {
       <DashboardNavbar />
       <div className="flex">
         <DashboardNav />
-        <main className="flex-1 p-8 ml-64">
+        <main className="flex-1 p-4 md:p-8 pt-20 ml-64 md:ml-64">
           {/* Header */}
           <div className="mb-8 flex justify-between items-center">
             <div>
