@@ -298,9 +298,9 @@ const DealDetails = () => {
               </div>
             </Card>
           </div>
-        </main>
-      </div>
+      </main>
     </div>
+  );
   );
 };
 

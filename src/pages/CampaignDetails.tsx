@@ -581,9 +581,9 @@ const CampaignDetails = () => {
               </TabsContent>
             </Tabs>
           </div>
-        </main>
-      </div>
+      </main>
     </div>
+  );
   );
 };
 

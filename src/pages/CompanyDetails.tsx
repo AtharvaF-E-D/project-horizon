@@ -282,9 +282,9 @@ const CompanyDetails = () => {
               </Card>
             )}
           </div>
-        </main>
-      </div>
+      </main>
     </div>
+  );
   );
 };
 

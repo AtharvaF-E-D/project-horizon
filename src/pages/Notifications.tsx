@@ -180,9 +180,9 @@ const Notifications = () => {
               </div>
             </ScrollArea>
           </div>
-        </main>
-      </div>
+      </main>
     </div>
+  );
   );
 };
 
