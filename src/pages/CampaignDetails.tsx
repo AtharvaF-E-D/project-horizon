@@ -584,7 +584,6 @@ const CampaignDetails = () => {
       </main>
     </div>
   );
-  );
 };
 
 export default CampaignDetails;

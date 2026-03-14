@@ -301,7 +301,6 @@ const DealDetails = () => {
       </main>
     </div>
   );
-  );
 };
 
 export default DealDetails;

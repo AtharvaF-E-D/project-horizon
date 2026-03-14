@@ -285,7 +285,6 @@ const CompanyDetails = () => {
       </main>
     </div>
   );
-  );
 };
 
 export default CompanyDetails;
