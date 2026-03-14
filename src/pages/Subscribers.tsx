@@ -202,7 +202,7 @@ const Subscribers = () => {
       <DashboardNavbar />
       <DashboardNav />
       
-      <main className="md:pl-64 pt-16">
+      <main className="ml-64 pt-20 p-4 md:p-8">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">

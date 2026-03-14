@@ -477,7 +477,7 @@ const DataImportExport = () => {
       <DashboardNavbar />
       <DashboardNav />
       
-      <main className="pl-64 pt-16">
+      <main className="ml-64 pt-20 p-4 md:p-8">
         <div className="p-6 space-y-6">
           {/* Header */}
           <div>

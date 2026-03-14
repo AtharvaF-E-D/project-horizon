@@ -129,9 +129,8 @@ const CompanyDetails = () => {
   return (
     <div className="min-h-screen bg-background">
       <DashboardNavbar />
-      <div className="flex">
-        <DashboardNav />
-        <main className="flex-1 p-8 ml-64">
+      <DashboardNav />
+      <main className="ml-64 pt-20 p-4 md:p-8">
           <div className="max-w-2xl">
             <Button
               variant="ghost"
