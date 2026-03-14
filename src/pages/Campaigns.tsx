@@ -140,7 +140,7 @@ const Campaigns = () => {
       <div className="min-h-screen bg-background">
         <DashboardNavbar />
         <DashboardNav />
-        <main className="ml-64 pt-16 p-8 flex items-center justify-center">
+        <main className="ml-64 pt-20 p-4 md:p-8 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </main>
       </div>

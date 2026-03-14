@@ -82,9 +82,8 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-background">
       <DashboardNavbar />
-      <div className="flex">
-        <DashboardNav />
-        <main className="flex-1 p-8 pt-20 ml-64 md:ml-64">
+      <DashboardNav />
+      <main className="ml-64 pt-20 p-4 md:p-8">
           <div className="max-w-2xl">
             <div className="mb-8">
               <h1 className="text-3xl font-bold mb-2">Profile</h1>
@@ -148,8 +147,7 @@ const Profile = () => {
               </div>
             </Card>
           </div>
-        </main>
-      </div>
+      </main>
     </div>
   );
 };
