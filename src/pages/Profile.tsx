@@ -147,8 +147,7 @@ const Profile = () => {
               </div>
             </Card>
           </div>
-        </main>
-      </div>
+      </main>
     </div>
   );
 };

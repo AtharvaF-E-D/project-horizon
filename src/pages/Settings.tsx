@@ -150,8 +150,7 @@ const Settings = () => {
               </TabsContent>
             </Tabs>
           </div>
-        </main>
-      </div>
+      </main>
     </div>
   );
 };
