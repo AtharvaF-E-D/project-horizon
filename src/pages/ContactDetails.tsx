@@ -256,7 +256,6 @@ const ContactDetails = () => {
       </main>
     </div>
   );
-  );
 };
 
 export default ContactDetails;
