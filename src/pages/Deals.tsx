@@ -184,8 +184,7 @@ const Deals = () => {
               </div>
             )}
           </Card>
-        </main>
-      </div>
+      </main>
     </div>
   );
 };

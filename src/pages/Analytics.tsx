@@ -576,8 +576,7 @@ const Analytics = () => {
               </div>
             </TabsContent>
           </Tabs>
-        </main>
-      </div>
+      </main>
     </div>
   );
 };

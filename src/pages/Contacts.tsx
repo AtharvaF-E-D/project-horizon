@@ -145,8 +145,7 @@ const Contacts = () => {
               </div>
             )}
           </Card>
-        </main>
-      </div>
+      </main>
     </div>
   );
 };

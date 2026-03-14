@@ -900,8 +900,7 @@ const Team = () => {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-        </main>
-      </div>
+      </main>
     </div>
   );
 };
