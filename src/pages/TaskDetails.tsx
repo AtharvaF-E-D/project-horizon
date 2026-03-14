@@ -183,7 +183,7 @@ const TaskDetails = () => {
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
         <DashboardNavbar />
         <DashboardNav />
-        <main className="ml-64 pt-16 p-8">
+        <main className="ml-64 pt-20 p-4 md:p-8">
           <p>Loading...</p>
         </main>
       </div>
