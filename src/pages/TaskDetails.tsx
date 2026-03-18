@@ -206,7 +206,7 @@ const TaskDetails = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <DashboardNavbar />
       <DashboardNav />
-      <main className="ml-64 pt-20 p-4 md:p-8">
+      <main className="ml-64 pt-20 px-4 pb-4 md:px-8 md:pb-8">
         <div className="mb-8 flex items-center justify-between animate-fade-in">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => navigate("/tasks")}>
