@@ -71,3 +71,11 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+
+Role	Email	Password
+Owner	owner@simplify.test	Owner@123
+Admin	admin@simplify.test	Admin@123
+Manager	manager@simplify.test	Manager@123
+Agent	agent@simplify.test	Agent@123
+Viewer	viewer@simplify.test	Viewer@123
