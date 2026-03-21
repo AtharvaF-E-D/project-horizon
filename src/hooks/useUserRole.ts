@@ -21,6 +21,10 @@ export const useUserRole = () => {
         return;
       }
 
+      // Reset loading to true when user changes to prevent
+      // brief window with stale (viewer) permissions
+      setLoading(true);
+
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")
