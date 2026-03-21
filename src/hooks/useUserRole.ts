@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { getPermissions, RolePermissions } from "@/config/permissions";
@@ -7,20 +7,29 @@ import type { Database } from "@/integrations/supabase/types";
 type AppRole = Database["public"]["Enums"]["app_role"];
 
 export const useUserRole = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [role, setRole] = useState<AppRole | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [roleLoading, setRoleLoading] = useState(true);
   const [permissions, setPermissions] = useState<RolePermissions>(getPermissions(null));
 
   useEffect(() => {
-    const fetchRole = async () => {
-      if (!user) {
-        setRole(null);
-        setPermissions(getPermissions(null));
-        setLoading(false);
-        return;
-      }
+    // Don't resolve until auth is done loading
+    if (authLoading) {
+      setRoleLoading(true);
+      return;
+    }
 
+    if (!user) {
+      setRole(null);
+      setPermissions(getPermissions(null));
+      setRoleLoading(false);
+      return;
+    }
+
+    // User is available, fetch role
+    setRoleLoading(true);
+
+    const fetchRole = async () => {
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")
@@ -36,12 +45,13 @@ export const useUserRole = () => {
         setRole(userRole);
         setPermissions(getPermissions(userRole));
       }
-      setLoading(false);
+      setRoleLoading(false);
     };
 
     fetchRole();
-  }, [user]);
+  }, [user, authLoading]);
 
+  const loading = authLoading || roleLoading;
   const isOwner = role === "owner";
   const isAdmin = role === "admin" || role === "owner";
   const isManager = role === "manager" || isAdmin;
