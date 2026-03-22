@@ -67,26 +67,26 @@ const App = () => (
 
           {/* Protected routes */}
           <Route path="/dashboard" element={<ProtectedRoute permission="dashboard"><Dashboard /></ProtectedRoute>} />
-          <Route path="/leads" element={<ProtectedRoute permission="leads"><Leads /></ProtectedRoute>} />
-          <Route path="/leads/:id" element={<ProtectedRoute permission="leads"><LeadDetails /></ProtectedRoute>} />
           <Route path="/leads/new" element={<ProtectedRoute permission="leads"><AddLead /></ProtectedRoute>} />
+          <Route path="/leads/:id" element={<ProtectedRoute permission="leads"><LeadDetails /></ProtectedRoute>} />
+          <Route path="/leads" element={<ProtectedRoute permission="leads"><Leads /></ProtectedRoute>} />
           <Route path="/pipeline" element={<ProtectedRoute permission="pipeline"><Pipeline /></ProtectedRoute>} />
-          <Route path="/deals" element={<ProtectedRoute permission="deals"><Deals /></ProtectedRoute>} />
-          <Route path="/deals/:id" element={<ProtectedRoute permission="deals"><DealDetails /></ProtectedRoute>} />
           <Route path="/deals/new" element={<ProtectedRoute permission="deals"><DealDetails /></ProtectedRoute>} />
-          <Route path="/contacts" element={<ProtectedRoute permission="contacts"><Contacts /></ProtectedRoute>} />
-          <Route path="/contacts/:id" element={<ProtectedRoute permission="contacts"><ContactDetails /></ProtectedRoute>} />
+          <Route path="/deals/:id" element={<ProtectedRoute permission="deals"><DealDetails /></ProtectedRoute>} />
+          <Route path="/deals" element={<ProtectedRoute permission="deals"><Deals /></ProtectedRoute>} />
           <Route path="/contacts/new" element={<ProtectedRoute permission="contacts"><ContactDetails /></ProtectedRoute>} />
-          <Route path="/companies" element={<ProtectedRoute permission="companies"><Companies /></ProtectedRoute>} />
-          <Route path="/companies/:id" element={<ProtectedRoute permission="companies"><CompanyDetails /></ProtectedRoute>} />
+          <Route path="/contacts/:id" element={<ProtectedRoute permission="contacts"><ContactDetails /></ProtectedRoute>} />
+          <Route path="/contacts" element={<ProtectedRoute permission="contacts"><Contacts /></ProtectedRoute>} />
           <Route path="/companies/new" element={<ProtectedRoute permission="companies"><CompanyDetails /></ProtectedRoute>} />
+          <Route path="/companies/:id" element={<ProtectedRoute permission="companies"><CompanyDetails /></ProtectedRoute>} />
+          <Route path="/companies" element={<ProtectedRoute permission="companies"><Companies /></ProtectedRoute>} />
           <Route path="/analytics" element={<ProtectedRoute permission="analytics"><Analytics /></ProtectedRoute>} />
           <Route path="/ai-assistant" element={<ProtectedRoute permission="aiAssistant"><AIAssistant /></ProtectedRoute>} />
           <Route path="/tasks" element={<ProtectedRoute permission="tasks"><Tasks /></ProtectedRoute>} />
           <Route path="/tasks/:id" element={<ProtectedRoute permission="tasks"><TaskDetails /></ProtectedRoute>} />
-          <Route path="/campaigns" element={<ProtectedRoute permission="campaigns"><Campaigns /></ProtectedRoute>} />
-          <Route path="/campaigns/:id" element={<ProtectedRoute permission="campaigns"><CampaignDetails /></ProtectedRoute>} />
           <Route path="/campaigns/new" element={<ProtectedRoute permission="campaigns"><CampaignDetails /></ProtectedRoute>} />
+          <Route path="/campaigns/:id" element={<ProtectedRoute permission="campaigns"><CampaignDetails /></ProtectedRoute>} />
+          <Route path="/campaigns" element={<ProtectedRoute permission="campaigns"><Campaigns /></ProtectedRoute>} />
           <Route path="/campaign-analytics" element={<ProtectedRoute permission="campaignAnalytics"><CampaignAnalytics /></ProtectedRoute>} />
           <Route path="/segments" element={<ProtectedRoute permission="segments"><Segments /></ProtectedRoute>} />
           <Route path="/sequences" element={<ProtectedRoute permission="sequences"><EmailSequences /></ProtectedRoute>} />
