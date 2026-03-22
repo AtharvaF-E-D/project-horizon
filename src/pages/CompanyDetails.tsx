@@ -14,6 +14,7 @@ import { ArrowLeft, Loader2, Trash2, Mail, Phone, User } from "lucide-react";
 
 const CompanyDetails = () => {
   const { id } = useParams();
+  const isNew = !id || id === "new";
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -27,7 +28,7 @@ const CompanyDetails = () => {
   const [contacts, setContacts] = useState<any[]>([]);
 
   useEffect(() => {
-    if (id && id !== "new") {
+    if (!isNew) {
       fetchCompany();
     }
   }, [id]);
@@ -94,7 +95,7 @@ const CompanyDetails = () => {
         user_id: user.id,
       };
 
-      if (id === "new") {
+      if (isNew) {
         const { error } = await supabase.from("companies").insert(companyData);
         if (error) throw error;
         toast({ title: "Success", description: "Company created successfully" });
@@ -157,7 +158,7 @@ const CompanyDetails = () => {
 
             <div className="mb-8">
               <h1 className="text-3xl font-bold mb-2">
-                {id === "new" ? "New Company" : "Edit Company"}
+                {isNew ? "New Company" : "Edit Company"}
               </h1>
             </div>
 
@@ -240,7 +241,7 @@ const CompanyDetails = () => {
                   <Button onClick={handleSave} disabled={loading}>
                     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Company"}
                   </Button>
-                  {id !== "new" && (
+                  {!isNew && (
                     <Button
                       variant="destructive"
                       onClick={handleDelete}
@@ -254,7 +255,7 @@ const CompanyDetails = () => {
               </div>
             </Card>
 
-            {id !== "new" && contacts.length > 0 && (
+            {!isNew && contacts.length > 0 && (
               <Card className="p-6 mt-6">
                 <CardHeader className="px-0 pt-0">
                   <CardTitle>Related Contacts ({contacts.length})</CardTitle>
