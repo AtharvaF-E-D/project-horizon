@@ -14,6 +14,7 @@ import { ArrowLeft, Loader2, Trash2, Mail, Phone, User } from "lucide-react";
 
 const CompanyDetails = () => {
   const { id } = useParams();
+  const isNew = !id || id === "new";
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
