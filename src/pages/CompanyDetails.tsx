@@ -158,7 +158,7 @@ const CompanyDetails = () => {
 
             <div className="mb-8">
               <h1 className="text-3xl font-bold mb-2">
-                {id === "new" ? "New Company" : "Edit Company"}
+                {isNew ? "New Company" : "Edit Company"}
               </h1>
             </div>
 
