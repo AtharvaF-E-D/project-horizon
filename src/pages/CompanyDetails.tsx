@@ -28,7 +28,7 @@ const CompanyDetails = () => {
   const [contacts, setContacts] = useState<any[]>([]);
 
   useEffect(() => {
-    if (id && id !== "new") {
+    if (!isNew) {
       fetchCompany();
     }
   }, [id]);
