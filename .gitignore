@@ -22,3 +22,13 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Ignore root .env file
+.env
+
+# Ignore all env variants (recommended)
+.env.*
+!.env.example
+
+# Ignore Supabase config file
+supabase/config.toml
