@@ -84,9 +84,9 @@ const App = () => (
           <Route path="/ai-assistant" element={<ProtectedRoute permission="aiAssistant"><AIAssistant /></ProtectedRoute>} />
           <Route path="/tasks" element={<ProtectedRoute permission="tasks"><Tasks /></ProtectedRoute>} />
           <Route path="/tasks/:id" element={<ProtectedRoute permission="tasks"><TaskDetails /></ProtectedRoute>} />
-          <Route path="/campaigns" element={<ProtectedRoute permission="campaigns"><Campaigns /></ProtectedRoute>} />
-          <Route path="/campaigns/:id" element={<ProtectedRoute permission="campaigns"><CampaignDetails /></ProtectedRoute>} />
           <Route path="/campaigns/new" element={<ProtectedRoute permission="campaigns"><CampaignDetails /></ProtectedRoute>} />
+          <Route path="/campaigns/:id" element={<ProtectedRoute permission="campaigns"><CampaignDetails /></ProtectedRoute>} />
+          <Route path="/campaigns" element={<ProtectedRoute permission="campaigns"><Campaigns /></ProtectedRoute>} />
           <Route path="/campaign-analytics" element={<ProtectedRoute permission="campaignAnalytics"><CampaignAnalytics /></ProtectedRoute>} />
           <Route path="/segments" element={<ProtectedRoute permission="segments"><Segments /></ProtectedRoute>} />
           <Route path="/sequences" element={<ProtectedRoute permission="sequences"><EmailSequences /></ProtectedRoute>} />
