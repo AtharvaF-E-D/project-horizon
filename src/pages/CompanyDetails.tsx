@@ -255,7 +255,7 @@ const CompanyDetails = () => {
               </div>
             </Card>
 
-            {id !== "new" && contacts.length > 0 && (
+            {!isNew && contacts.length > 0 && (
               <Card className="p-6 mt-6">
                 <CardHeader className="px-0 pt-0">
                   <CardTitle>Related Contacts ({contacts.length})</CardTitle>
