@@ -95,7 +95,7 @@ const CompanyDetails = () => {
         user_id: user.id,
       };
 
-      if (id === "new") {
+      if (isNew) {
         const { error } = await supabase.from("companies").insert(companyData);
         if (error) throw error;
         toast({ title: "Success", description: "Company created successfully" });
