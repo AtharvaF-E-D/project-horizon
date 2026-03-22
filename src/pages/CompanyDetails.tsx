@@ -69,17 +69,29 @@ const CompanyDetails = () => {
   };
 
   const handleSave = async () => {
+    if (!name.trim()) {
+      toast({ title: "Error", description: "Company name is required", variant: "destructive" });
+      return;
+    }
+
     setLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({ title: "Error", description: "You must be logged in to save a company", variant: "destructive" });
+        navigate("/auth");
+        return;
+      }
+
       const companyData = {
-        name,
+        name: name.trim(),
         website: website || null,
         industry: industry || null,
         size: size || null,
         phone: phone || null,
         address: address || null,
         notes: notes || null,
-        user_id: (await supabase.auth.getUser()).data.user?.id,
+        user_id: user.id,
       };
 
       if (id === "new") {
@@ -88,17 +100,19 @@ const CompanyDetails = () => {
         toast({ title: "Success", description: "Company created successfully" });
         navigate("/companies");
       } else {
+        const { name: companyName, ...updateData } = companyData;
         const { error } = await supabase
           .from("companies")
-          .update(companyData)
+          .update({ ...updateData, name: companyName })
           .eq("id", id);
         if (error) throw error;
         toast({ title: "Success", description: "Company updated successfully" });
       }
     } catch (error: any) {
+      console.error("Save company error:", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to save company",
         variant: "destructive",
       });
     } finally {
