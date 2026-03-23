@@ -30,7 +30,7 @@ const ContactDetails = () => {
 
   useEffect(() => {
     fetchCompanies();
-    if (!isNewContact) {
+    if (!isNew) {
       fetchContact();
     }
   }, [id]);
