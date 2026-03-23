@@ -163,7 +163,7 @@ const ContactDetails = () => {
 
             <div className="mb-8">
               <h1 className="text-3xl font-bold mb-2">
-                {id === "new" ? "New Contact" : "Edit Contact"}
+                {isNew ? "New Contact" : "Edit Contact"}
               </h1>
             </div>
 
