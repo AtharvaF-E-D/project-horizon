@@ -76,7 +76,7 @@ const ContactDetails = () => {
     }
   };
 
-  const isNew = !id || id === "new";
+  // isNew defined above
 
   const handleSave = async () => {
     if (!firstName.trim() || !lastName.trim()) {
