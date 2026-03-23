@@ -76,7 +76,7 @@ const ContactDetails = () => {
     }
   };
 
-  // isNew defined above
+  
 
   const handleSave = async () => {
     if (!firstName.trim() || !lastName.trim()) {
