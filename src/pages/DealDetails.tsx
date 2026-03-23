@@ -181,7 +181,7 @@ const DealDetails = () => {
 
             <div className="mb-8">
               <h1 className="text-3xl font-bold mb-2">
-                {id === "new" ? "New Deal" : "Edit Deal"}
+                {isNew ? "New Deal" : "Edit Deal"}
               </h1>
             </div>
 
