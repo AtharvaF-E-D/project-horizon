@@ -91,11 +91,25 @@ const DealDetails = () => {
     }
   };
 
+  const isNew = !id || id === "new";
+
   const handleSave = async () => {
+    if (!title.trim()) {
+      toast({ title: "Error", description: "Deal title is required", variant: "destructive" });
+      return;
+    }
+
     setLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({ title: "Error", description: "You must be logged in", variant: "destructive" });
+        navigate("/auth");
+        return;
+      }
+
       const dealData = {
-        title,
+        title: title.trim(),
         value: parseFloat(value) || 0,
         stage: stage as any,
         probability: parseInt(probability) || 0,
@@ -103,10 +117,10 @@ const DealDetails = () => {
         notes: notes || null,
         company_id: companyId === "none" ? null : companyId,
         contact_id: contactId === "none" ? null : contactId,
-        user_id: (await supabase.auth.getUser()).data.user?.id,
+        user_id: user.id,
       };
 
-      if (id === "new") {
+      if (isNew) {
         const { error } = await supabase.from("deals").insert(dealData);
         if (error) throw error;
         toast({ title: "Success", description: "Deal created successfully" });
@@ -167,7 +181,7 @@ const DealDetails = () => {
 
             <div className="mb-8">
               <h1 className="text-3xl font-bold mb-2">
-                {id === "new" ? "New Deal" : "Edit Deal"}
+                {isNew ? "New Deal" : "Edit Deal"}
               </h1>
             </div>
 
@@ -284,7 +298,7 @@ const DealDetails = () => {
                   <Button onClick={handleSave} disabled={loading}>
                     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Deal"}
                   </Button>
-                  {id !== "new" && (
+                  {!isNew && (
                     <Button
                       variant="destructive"
                       onClick={handleDelete}

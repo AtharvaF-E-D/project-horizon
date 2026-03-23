@@ -26,9 +26,11 @@ const ContactDetails = () => {
   const [companyId, setCompanyId] = useState<string>("none");
   const [companies, setCompanies] = useState<{ id: string; name: string }[]>([]);
 
+  const isNew = !id || id === "new";
+
   useEffect(() => {
     fetchCompanies();
-    if (id && id !== "new") {
+    if (!isNew) {
       fetchContact();
     }
   }, [id]);
@@ -74,21 +76,35 @@ const ContactDetails = () => {
     }
   };
 
+  
+
   const handleSave = async () => {
+    if (!firstName.trim() || !lastName.trim()) {
+      toast({ title: "Error", description: "First and last name are required", variant: "destructive" });
+      return;
+    }
+
     setLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({ title: "Error", description: "You must be logged in", variant: "destructive" });
+        navigate("/auth");
+        return;
+      }
+
       const contactData = {
-        first_name: firstName,
-        last_name: lastName,
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
         email: email || null,
         phone: phone || null,
         title: title || null,
         notes: notes || null,
         company_id: companyId === "none" ? null : companyId,
-        user_id: (await supabase.auth.getUser()).data.user?.id,
+        user_id: user.id,
       };
 
-      if (id === "new") {
+      if (isNew) {
         const { error } = await supabase.from("contacts").insert(contactData);
         if (error) throw error;
         toast({ title: "Success", description: "Contact created successfully" });
@@ -149,7 +165,7 @@ const ContactDetails = () => {
 
             <div className="mb-8">
               <h1 className="text-3xl font-bold mb-2">
-                {id === "new" ? "New Contact" : "Edit Contact"}
+                {isNew ? "New Contact" : "Edit Contact"}
               </h1>
             </div>
 
@@ -239,7 +255,7 @@ const ContactDetails = () => {
                   <Button onClick={handleSave} disabled={loading}>
                     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Contact"}
                   </Button>
-                  {id !== "new" && (
+                  {!isNew && (
                     <Button
                       variant="destructive"
                       onClick={handleDelete}

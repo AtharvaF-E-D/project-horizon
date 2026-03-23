@@ -85,7 +85,7 @@ const Deals = () => {
               <h1 className="text-3xl font-bold mb-2">Deals</h1>
               <p className="text-muted-foreground">Manage your sales opportunities</p>
             </div>
-            <PermissionGate permission="canDeleteRecords">
+            <PermissionGate permission="deals">
               <Button onClick={() => navigate("/deals/new")}>
                 <Plus className="h-4 w-4 mr-2" />
                 New Deal
