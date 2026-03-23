@@ -292,7 +292,7 @@ const Tasks = () => {
               <SelectItem value="other">Other Tasks</SelectItem>
             </SelectContent>
           </Select>
-          <PermissionGate permission="canDeleteRecords">
+          <PermissionGate permission="tasks">
             <Button onClick={() => setIsOpen(true)} className="gradient-primary text-white">
               <Plus className="w-4 h-4 mr-2" />
               New Task
