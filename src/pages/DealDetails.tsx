@@ -298,7 +298,7 @@ const DealDetails = () => {
                   <Button onClick={handleSave} disabled={loading}>
                     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Deal"}
                   </Button>
-                  {id !== "new" && (
+                  {!isNew && (
                     <Button
                       variant="destructive"
                       onClick={handleDelete}

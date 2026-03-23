@@ -1,270 +1,304 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { DashboardNav } from "@/components/layout/DashboardNav";
 import { DashboardNavbar } from "@/components/layout/DashboardNavbar";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Phone, Mail, Calendar, FileText, Upload, Send, Clock, MessageSquare, Bot } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { ArrowLeft, Loader2, Trash2 } from "lucide-react";
 
 const LeadDetails = () => {
   const { id } = useParams();
+  const isNew = !id || id === "new";
   const navigate = useNavigate();
-  const [note, setNote] = useState("");
-  const [followUp, setFollowUp] = useState("");
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [company, setCompany] = useState("");
+  const [title, setTitle] = useState("");
+  const [source, setSource] = useState("other");
+  const [status, setStatus] = useState("new");
+  const [score, setScore] = useState("0");
+  const [notes, setNotes] = useState("");
 
-  // Mock lead data
-  const lead = {
-    id: id || "1",
-    name: "Sarah Johnson",
-    email: "sarah.johnson@techcorp.com",
-    phone: "+1 (555) 123-4567",
-    company: "TechCorp Inc.",
-    status: "Qualified",
-    value: "$45,000",
-    source: "Website",
+  useEffect(() => {
+    if (!isNew) {
+      fetchLead();
+    }
+  }, [id]);
+
+  const fetchLead = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("leads")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setFirstName(data.first_name);
+        setLastName(data.last_name);
+        setEmail(data.email || "");
+        setPhone(data.phone || "");
+        setCompany(data.company || "");
+        setTitle(data.title || "");
+        setSource(data.source || "other");
+        setStatus(data.status || "new");
+        setScore(data.score?.toString() || "0");
+        setNotes(data.notes || "");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to load lead details",
+        variant: "destructive",
+      });
+    }
   };
 
-  const timeline = [
-    { id: 1, type: "email", action: "Email sent", date: "2024-01-15 10:30 AM", user: "You" },
-    { id: 2, type: "call", action: "Call made - Interested in demo", date: "2024-01-14 2:15 PM", user: "You" },
-    { id: 3, type: "note", action: "Added note", date: "2024-01-13 4:45 PM", user: "You" },
-    { id: 4, type: "created", action: "Lead created from website", date: "2024-01-10 9:00 AM", user: "System" },
-  ];
+  const handleSave = async () => {
+    if (!firstName.trim() || !lastName.trim()) {
+      toast({ title: "Error", description: "First name and last name are required", variant: "destructive" });
+      return;
+    }
 
-  const aiNotes = [
-    "High conversion probability (85%) based on engagement patterns",
-    "Recommended next action: Schedule product demo within 48 hours",
-    "Similar leads from this company have 3x higher conversion rate",
-    "Best contact time: Tuesday-Thursday, 2-4 PM EST",
-  ];
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({ title: "Error", description: "You must be logged in", variant: "destructive" });
+        navigate("/auth");
+        return;
+      }
 
-  const files = [
-    { id: 1, name: "Product Proposal.pdf", size: "2.3 MB", date: "2024-01-14" },
-    { id: 2, name: "Contract Template.docx", size: "1.1 MB", date: "2024-01-13" },
-    { id: 3, name: "Company Profile.pdf", size: "3.5 MB", date: "2024-01-10" },
-  ];
+      const leadData = {
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        email: email || null,
+        phone: phone || null,
+        company: company || null,
+        title: title || null,
+        source: source as any,
+        status: status as any,
+        score: parseInt(score) || 0,
+        notes: notes || null,
+        user_id: user.id,
+      };
+
+      if (isNew) {
+        const { error } = await supabase.from("leads").insert(leadData);
+        if (error) throw error;
+        toast({ title: "Success", description: "Lead created successfully" });
+        navigate("/leads");
+      } else {
+        const { error } = await supabase
+          .from("leads")
+          .update(leadData)
+          .eq("id", id);
+        if (error) throw error;
+        toast({ title: "Success", description: "Lead updated successfully" });
+      }
+    } catch (error: any) {
+      console.error("Save lead error:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save lead",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this lead?")) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.from("leads").delete().eq("id", id);
+      if (error) throw error;
+      toast({ title: "Success", description: "Lead deleted successfully" });
+      navigate("/leads");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+    <div className="min-h-screen bg-background">
       <DashboardNavbar />
       <DashboardNav />
       <main className="ml-64 pt-20 px-4 pb-4 md:px-8 md:pb-8">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/leads")}
-          className="mb-6 hover:bg-primary/10"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Leads
-        </Button>
+        <div className="max-w-2xl">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/leads")}
+            className="mb-6"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Leads
+          </Button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Lead Info & Timeline */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Lead Header */}
-            <Card className="border-2 border-primary/20 card-hover">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-3xl">{lead.name}</CardTitle>
-                    <CardDescription className="text-lg mt-2">{lead.company}</CardDescription>
-                  </div>
-                  <Badge className="bg-gradient-primary text-white">{lead.status}</Badge>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Mail className="w-4 h-4 text-primary" />
-                    <span className="text-sm">{lead.email}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Phone className="w-4 h-4 text-secondary" />
-                    <span className="text-sm">{lead.phone}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">Value: {lead.value}</Badge>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary">Source: {lead.source}</Badge>
-                  </div>
-                </div>
-              </CardHeader>
-            </Card>
-
-            {/* Tabs Section */}
-            <Tabs defaultValue="timeline" className="animate-fade-in">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="timeline">Timeline</TabsTrigger>
-                <TabsTrigger value="ai-notes">
-                  <Bot className="w-4 h-4 mr-2" />
-                  AI Insights
-                </TabsTrigger>
-                <TabsTrigger value="files">Files</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="timeline">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Activity Timeline</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {timeline.map((item, index) => (
-                        <div
-                          key={item.id}
-                          className="flex gap-4 animate-fade-in"
-                          style={{ animationDelay: `${index * 100}ms` }}
-                        >
-                          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center">
-                            {item.type === "email" && <Mail className="w-5 h-5 text-white" />}
-                            {item.type === "call" && <Phone className="w-5 h-5 text-white" />}
-                            {item.type === "note" && <MessageSquare className="w-5 h-5 text-white" />}
-                            {item.type === "created" && <Clock className="w-5 h-5 text-white" />}
-                          </div>
-                          <div className="flex-1 pb-4 border-b border-border/50">
-                            <p className="font-medium">{item.action}</p>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {item.date} • {item.user}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="ai-notes">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Bot className="w-6 h-6 text-primary" />
-                      AI-Powered Insights
-                    </CardTitle>
-                    <CardDescription>Smart recommendations based on lead behavior</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {aiNotes.map((note, index) => (
-                        <div
-                          key={index}
-                          className="p-4 bg-gradient-subtle rounded-lg border border-primary/20 animate-fade-in"
-                          style={{ animationDelay: `${index * 100}ms` }}
-                        >
-                          <p className="text-sm">{note}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="files">
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle>Attached Files</CardTitle>
-                      <Button size="sm" className="bg-gradient-primary text-white">
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {files.map((file, index) => (
-                        <div
-                          key={file.id}
-                          className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer animate-fade-in"
-                          style={{ animationDelay: `${index * 100}ms` }}
-                        >
-                          <div className="flex items-center gap-3">
-                            <FileText className="w-5 h-5 text-primary" />
-                            <div>
-                              <p className="font-medium text-sm">{file.name}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {file.size} • {file.date}
-                              </p>
-                            </div>
-                          </div>
-                          <Button variant="ghost" size="sm">View</Button>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">
+              {isNew ? "New Lead" : "Edit Lead"}
+            </h1>
           </div>
 
-          {/* Right Column - Quick Actions */}
-          <div className="space-y-6">
-            {/* Add Note */}
-            <Card className="border-2 border-secondary/20 card-hover">
-              <CardHeader>
-                <CardTitle>Add Note</CardTitle>
-              </CardHeader>
-              <CardContent>
+          <Card className="p-6">
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="firstName">First Name *</Label>
+                  <Input
+                    id="firstName"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="John"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="lastName">Last Name *</Label>
+                  <Input
+                    id="lastName"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    placeholder="Doe"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="john@example.com"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="phone">Phone</Label>
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+1 234 567 8900"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="company">Company</Label>
+                  <Input
+                    id="company"
+                    value={company}
+                    onChange={(e) => setCompany(e.target.value)}
+                    placeholder="Acme Corp"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="title">Job Title</Label>
+                  <Input
+                    id="title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Sales Manager"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select value={status} onValueChange={setStatus}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="new">New</SelectItem>
+                      <SelectItem value="contacted">Contacted</SelectItem>
+                      <SelectItem value="qualified">Qualified</SelectItem>
+                      <SelectItem value="unqualified">Unqualified</SelectItem>
+                      <SelectItem value="converted">Converted</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="source">Source</Label>
+                  <Select value={source} onValueChange={setSource}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="website">Website</SelectItem>
+                      <SelectItem value="referral">Referral</SelectItem>
+                      <SelectItem value="social_media">Social Media</SelectItem>
+                      <SelectItem value="email_campaign">Email Campaign</SelectItem>
+                      <SelectItem value="cold_call">Cold Call</SelectItem>
+                      <SelectItem value="event">Event</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="score">Lead Score</Label>
+                  <Input
+                    id="score"
+                    type="number"
+                    value={score}
+                    onChange={(e) => setScore(e.target.value)}
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="notes">Notes</Label>
                 <Textarea
-                  placeholder="Write a note about this lead..."
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  className="mb-3"
+                  id="notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Add notes about this lead..."
                   rows={4}
                 />
-                <Button className="w-full bg-gradient-primary text-white">
-                  <Send className="w-4 h-4 mr-2" />
-                  Save Note
-                </Button>
-              </CardContent>
-            </Card>
+              </div>
 
-            {/* Schedule Follow-up */}
-            <Card className="border-2 border-accent/20 card-hover">
-              <CardHeader>
-                <CardTitle>Schedule Follow-up</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Input
-                  type="datetime-local"
-                  value={followUp}
-                  onChange={(e) => setFollowUp(e.target.value)}
-                />
-                <Textarea
-                  placeholder="Follow-up details..."
-                  rows={3}
-                />
-                <Button className="w-full bg-gradient-secondary text-white">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  Schedule
+              <div className="flex gap-2">
+                <Button onClick={handleSave} disabled={loading}>
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : isNew ? "Create Lead" : "Save Lead"}
                 </Button>
-              </CardContent>
-            </Card>
-
-            {/* Quick Actions */}
-            <Card className="card-hover">
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Button variant="outline" className="w-full justify-start">
-                  <Phone className="w-4 h-4 mr-2" />
-                  Call Lead
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <Mail className="w-4 h-4 mr-2" />
-                  Send Email
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  Book Meeting
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+                {!isNew && (
+                  <Button
+                    variant="destructive"
+                    onClick={handleDelete}
+                    disabled={loading}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </Button>
+                )}
+              </div>
+            </div>
+          </Card>
         </div>
       </main>
     </div>
