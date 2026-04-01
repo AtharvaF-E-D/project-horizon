@@ -48,7 +48,7 @@ const Auth = () => {
         },
       });
       if (error) throw error;
-      toast({ title: "Account created!", description: "You can now sign in with your credentials." });
+      toast({ title: "Account created!", description: "Please check your email to verify your account before signing in." });
       setEmail(""); setPassword(""); setFullName("");
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
