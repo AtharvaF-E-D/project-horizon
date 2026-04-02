@@ -52,7 +52,13 @@ export const DealCard = ({ deal }: DealCardProps) => {
       ref={setNodeRef}
       style={style}
       className="p-4 bg-card hover:shadow-md transition-shadow cursor-pointer group"
-      onClick={() => navigate(`/deals/${deal.id}`)}
+      onClick={() => {
+        if (wasDragging.current) {
+          wasDragging.current = false;
+          return;
+        }
+        navigate(`/deals/${deal.id}`);
+      }}
     >
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2">
