@@ -1,3 +1,4 @@
+import React from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Card } from "@/components/ui/card";
@@ -34,6 +35,14 @@ export const DealCard = ({ deal }: DealCardProps) => {
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const wasDragging = React.useRef(false);
+
+  React.useEffect(() => {
+    if (isDragging) {
+      wasDragging.current = true;
+    }
+  }, [isDragging]);
+
   const contactInitials = deal.contact
     ? `${deal.contact.first_name[0]}${deal.contact.last_name[0]}`
     : "?";
@@ -43,7 +52,13 @@ export const DealCard = ({ deal }: DealCardProps) => {
       ref={setNodeRef}
       style={style}
       className="p-4 bg-card hover:shadow-md transition-shadow cursor-pointer group"
-      onClick={() => navigate(`/deals/${deal.id}`)}
+      onClick={() => {
+        if (wasDragging.current) {
+          wasDragging.current = false;
+          return;
+        }
+        navigate(`/deals/${deal.id}`);
+      }}
     >
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2">
