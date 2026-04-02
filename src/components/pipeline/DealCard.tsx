@@ -34,6 +34,14 @@ export const DealCard = ({ deal }: DealCardProps) => {
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const wasDragging = React.useRef(false);
+
+  React.useEffect(() => {
+    if (isDragging) {
+      wasDragging.current = true;
+    }
+  }, [isDragging]);
+
   const contactInitials = deal.contact
     ? `${deal.contact.first_name[0]}${deal.contact.last_name[0]}`
     : "?";
