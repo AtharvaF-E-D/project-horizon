@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TwilioDialer } from "@/components/calls/TwilioDialer";
 
 interface Call {
   id: string;
@@ -482,6 +483,12 @@ export default function Calls() {
                   </Button>
                 </CardContent>
               </Card>
+
+              {/* Twilio Click-to-Call */}
+              <TwilioDialer
+                dialNumber={dialNumber}
+                contactName={selectedContact ? `${selectedContact.first_name} ${selectedContact.last_name}` : null}
+              />
 
               {/* Quick Contacts */}
               <Card>
