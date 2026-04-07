@@ -62,6 +62,19 @@ export default function Calls() {
   const [activeTab, setActiveTab] = useState("history");
   const { toast } = useToast();
   const { user } = useAuth();
+  const {
+    twilioNumbers,
+    selectedTwilioNumber,
+    agentPhone,
+    isCalling: isTwilioCalling,
+    isLoadingNumbers,
+    setSelectedTwilioNumber,
+    setAgentPhone,
+    fetchTwilioNumbers,
+    makeCall: makeTwilioCall,
+  } = useTwilioCaller();
+  const [showTwilioSettings, setShowTwilioSettings] = useState(false);
+  const [twilioLoaded, setTwilioLoaded] = useState(false);
 
   useEffect(() => {
     if (user) {
