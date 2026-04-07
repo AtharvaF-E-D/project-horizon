@@ -8,54 +8,58 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { 
+import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { 
-  MessageCircle, 
-  Search, 
-  Send, 
-  Phone, 
-  Video, 
-  MoreVertical, 
-  Paperclip, 
+import {
+  MessageCircle,
+  Search,
+  Send,
+  Phone,
+  Video,
+  MoreVertical,
+  Paperclip,
   Smile,
   FileText,
   Plus,
   Check,
   CheckCheck,
-  Clock
+  Clock,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { Label } from "@/components/ui/label";
 
 interface Conversation {
-  id: number;
-  name: string;
-  company: string;
-  lastMessage: string;
-  time: string;
-  unread: number;
-  avatar: string;
-  online: boolean;
-  phone: string;
+  id: string;
+  contact_name: string;
+  contact_company: string | null;
+  contact_phone: string;
+  contact_avatar: string | null;
+  is_online: boolean;
+  unread_count: number;
+  last_message: string | null;
+  last_message_at: string | null;
 }
 
 interface Message {
-  id: number;
+  id: string;
   sender: "me" | "them";
   text: string;
-  time: string;
   status: "sending" | "sent" | "delivered" | "read";
+  created_at: string;
 }
 
 interface Template {
@@ -64,23 +68,6 @@ interface Template {
   content: string;
   category: string;
 }
-
-const initialConversations: Conversation[] = [
-  { id: 1, name: "John Smith", company: "Tech Corp", lastMessage: "Thanks for the info!", time: "2m ago", unread: 2, avatar: "JS", online: true, phone: "+1 555-0101" },
-  { id: 2, name: "Sarah Johnson", company: "Marketing Inc", lastMessage: "Can we schedule a call?", time: "15m ago", unread: 0, avatar: "SJ", online: true, phone: "+1 555-0102" },
-  { id: 3, name: "Mike Wilson", company: "Sales Co", lastMessage: "Looking forward to it", time: "1h ago", unread: 1, avatar: "MW", online: false, phone: "+1 555-0103" },
-  { id: 4, name: "Emily Brown", company: "Design Studio", lastMessage: "Perfect, see you then", time: "2h ago", unread: 0, avatar: "EB", online: false, phone: "+1 555-0104" },
-  { id: 5, name: "David Lee", company: "Consulting Ltd", lastMessage: "I'll send the details", time: "3h ago", unread: 0, avatar: "DL", online: true, phone: "+1 555-0105" },
-];
-
-const initialMessages: Message[] = [
-  { id: 1, sender: "them", text: "Hi! I'm interested in your CRM solution", time: "10:30 AM", status: "read" },
-  { id: 2, sender: "me", text: "Great! I'd be happy to help. What specific features are you looking for?", time: "10:32 AM", status: "read" },
-  { id: 3, sender: "them", text: "Mainly lead management and email campaigns", time: "10:35 AM", status: "read" },
-  { id: 4, sender: "me", text: "Perfect! Our platform includes both. Would you like to schedule a demo?", time: "10:37 AM", status: "read" },
-  { id: 5, sender: "them", text: "Yes, that would be great!", time: "10:40 AM", status: "read" },
-  { id: 6, sender: "me", text: "Excellent! I'll send you a calendar link shortly", time: "10:41 AM", status: "delivered" },
-];
 
 const messageTemplates: Template[] = [
   { id: 1, name: "Welcome", content: "Hi! Thanks for your interest. How can I help you today?", category: "Greeting" },
@@ -92,19 +79,106 @@ const messageTemplates: Template[] = [
 ];
 
 export default function WhatsApp() {
-  const [conversations, setConversations] = useState(initialConversations);
-  const [selectedConversation, setSelectedConversation] = useState<Conversation>(conversations[0]);
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const { user } = useAuth();
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [messageText, setMessageText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [showTemplates, setShowTemplates] = useState(false);
+  const [showNewConvo, setShowNewConvo] = useState(false);
+  const [newConvoName, setNewConvoName] = useState("");
+  const [newConvoPhone, setNewConvoPhone] = useState("");
+  const [newConvoCompany, setNewConvoCompany] = useState("");
+  const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const filteredConversations = conversations.filter(
-    (conv) =>
-      conv.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      conv.company.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Fetch conversations
+  useEffect(() => {
+    if (!user) return;
+    const fetchConversations = async () => {
+      const { data, error } = await supabase
+        .from("whatsapp_conversations")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("last_message_at", { ascending: false });
+      if (!error && data) {
+        setConversations(data as Conversation[]);
+        if (data.length > 0 && !selectedConversation) {
+          setSelectedConversation(data[0] as Conversation);
+        }
+      }
+      setLoading(false);
+    };
+    fetchConversations();
+  }, [user]);
+
+  // Fetch messages when conversation changes
+  useEffect(() => {
+    if (!selectedConversation || !user) return;
+    const fetchMessages = async () => {
+      const { data, error } = await supabase
+        .from("whatsapp_messages")
+        .select("*")
+        .eq("conversation_id", selectedConversation.id)
+        .order("created_at", { ascending: true });
+      if (!error && data) {
+        setMessages(data.map((m: any) => ({
+          id: m.id,
+          sender: m.sender as "me" | "them",
+          text: m.text,
+          status: m.status as Message["status"],
+          created_at: m.created_at,
+        })));
+      }
+    };
+    fetchMessages();
+
+    // Mark unread as 0
+    if (selectedConversation.unread_count > 0) {
+      supabase
+        .from("whatsapp_conversations")
+        .update({ unread_count: 0 })
+        .eq("id", selectedConversation.id)
+        .then(() => {
+          setConversations(prev =>
+            prev.map(c => c.id === selectedConversation.id ? { ...c, unread_count: 0 } : c)
+          );
+        });
+    }
+  }, [selectedConversation?.id, user]);
+
+  // Realtime subscription for messages
+  useEffect(() => {
+    if (!selectedConversation) return;
+    const channel = supabase
+      .channel(`wa-messages-${selectedConversation.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "whatsapp_messages",
+          filter: `conversation_id=eq.${selectedConversation.id}`,
+        },
+        (payload) => {
+          const m = payload.new as any;
+          setMessages(prev => {
+            if (prev.find(msg => msg.id === m.id)) return prev;
+            return [...prev, {
+              id: m.id,
+              sender: m.sender,
+              text: m.text,
+              status: m.status,
+              created_at: m.created_at,
+            }];
+          });
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [selectedConversation?.id]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -114,48 +188,105 @@ export default function WhatsApp() {
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = () => {
-    if (messageText.trim()) {
-      const newMessage: Message = {
-        id: messages.length + 1,
+  const filteredConversations = conversations.filter(
+    (conv) =>
+      conv.contact_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (conv.contact_company || "").toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleSendMessage = async () => {
+    if (!messageText.trim() || !selectedConversation || !user) return;
+
+    const text = messageText.trim();
+    setMessageText("");
+
+    // Optimistic UI
+    const tempId = crypto.randomUUID();
+    const optimisticMsg: Message = {
+      id: tempId,
+      sender: "me",
+      text,
+      status: "sending",
+      created_at: new Date().toISOString(),
+    };
+    setMessages(prev => [...prev, optimisticMsg]);
+
+    const { data, error } = await supabase
+      .from("whatsapp_messages")
+      .insert({
+        conversation_id: selectedConversation.id,
+        user_id: user.id,
         sender: "me",
-        text: messageText,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        status: "sending"
-      };
-      
-      setMessages([...messages, newMessage]);
-      setMessageText("");
-      
-      // Simulate message being sent
-      setTimeout(() => {
-        setMessages(prev => 
-          prev.map(msg => 
-            msg.id === newMessage.id ? { ...msg, status: "sent" } : msg
-          )
-        );
-      }, 500);
+        text,
+        status: "sent",
+      })
+      .select()
+      .single();
 
-      // Simulate delivery
-      setTimeout(() => {
-        setMessages(prev => 
-          prev.map(msg => 
-            msg.id === newMessage.id ? { ...msg, status: "delivered" } : msg
-          )
-        );
-      }, 1500);
-
-      // Update conversation last message
-      setConversations(prev =>
-        prev.map(conv =>
-          conv.id === selectedConversation.id
-            ? { ...conv, lastMessage: messageText, time: "Just now" }
-            : conv
-        )
-      );
-
-      toast.success("Message sent");
+    if (error) {
+      toast.error("Failed to send message");
+      setMessages(prev => prev.filter(m => m.id !== tempId));
+      return;
     }
+
+    // Replace optimistic msg with real one
+    setMessages(prev => prev.map(m => m.id === tempId ? {
+      id: data.id,
+      sender: "me",
+      text: data.text,
+      status: data.status as Message["status"],
+      created_at: data.created_at,
+    } : m));
+
+    // Update conversation last_message
+    await supabase
+      .from("whatsapp_conversations")
+      .update({ last_message: text, last_message_at: new Date().toISOString() })
+      .eq("id", selectedConversation.id);
+
+    setConversations(prev =>
+      prev.map(c =>
+        c.id === selectedConversation.id
+          ? { ...c, last_message: text, last_message_at: new Date().toISOString() }
+          : c
+      )
+    );
+
+    toast.success("Message sent");
+  };
+
+  const handleCreateConversation = async () => {
+    if (!newConvoName.trim() || !newConvoPhone.trim() || !user) return;
+
+    const initials = newConvoName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+
+    const { data, error } = await supabase
+      .from("whatsapp_conversations")
+      .insert({
+        user_id: user.id,
+        contact_name: newConvoName.trim(),
+        contact_phone: newConvoPhone.trim(),
+        contact_company: newConvoCompany.trim() || null,
+        contact_avatar: initials,
+        is_online: false,
+        unread_count: 0,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      toast.error("Failed to create conversation");
+      return;
+    }
+
+    const newConvo = data as Conversation;
+    setConversations(prev => [newConvo, ...prev]);
+    setSelectedConversation(newConvo);
+    setShowNewConvo(false);
+    setNewConvoName("");
+    setNewConvoPhone("");
+    setNewConvoCompany("");
+    toast.success("Conversation created");
   };
 
   const handleTemplateSelect = (template: Template) => {
@@ -164,14 +295,15 @@ export default function WhatsApp() {
     toast.info(`Template "${template.name}" selected`);
   };
 
-  const handleSelectConversation = (conversation: Conversation) => {
-    setSelectedConversation(conversation);
-    // Clear unread count
-    setConversations(prev =>
-      prev.map(conv =>
-        conv.id === conversation.id ? { ...conv, unread: 0 } : conv
-      )
-    );
+  const formatTime = (isoString: string) => {
+    const date = new Date(isoString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return "Just now";
+    if (diffMin < 60) return `${diffMin}m ago`;
+    if (diffMin < 1440) return `${Math.floor(diffMin / 60)}h ago`;
+    return date.toLocaleDateString();
   };
 
   const getStatusIcon = (status: Message["status"]) => {
@@ -186,6 +318,18 @@ export default function WhatsApp() {
         return <CheckCheck className="w-3 h-3 text-primary" />;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <DashboardNavbar />
+        <DashboardNav />
+        <main className="ml-64 pt-20 p-8 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -204,51 +348,83 @@ export default function WhatsApp() {
                 Connect with leads through WhatsApp
               </p>
             </div>
-            <Dialog open={showTemplates} onOpenChange={setShowTemplates}>
-              <DialogTrigger asChild>
-                <Button className="gap-2">
-                  <FileText className="w-4 h-4" />
-                  Templates
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Message Templates</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-                  {["Greeting", "Sales", "Follow-up", "General"].map((category) => (
-                    <div key={category}>
-                      <h3 className="font-semibold text-sm text-muted-foreground mb-2">{category}</h3>
-                      <div className="grid gap-2">
-                        {messageTemplates
-                          .filter((t) => t.category === category)
-                          .map((template) => (
-                            <Card
-                              key={template.id}
-                              className="cursor-pointer hover:bg-accent transition-colors"
-                              onClick={() => handleTemplateSelect(template)}
-                            >
-                              <CardContent className="p-4">
-                                <div className="flex justify-between items-start">
-                                  <div>
-                                    <p className="font-medium">{template.name}</p>
-                                    <p className="text-sm text-muted-foreground mt-1">
-                                      {template.content}
-                                    </p>
-                                  </div>
-                                  <Button variant="ghost" size="sm">
-                                    Use
-                                  </Button>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          ))}
-                      </div>
+            <div className="flex gap-2">
+              <Dialog open={showNewConvo} onOpenChange={setShowNewConvo}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="gap-2">
+                    <Plus className="w-4 h-4" />
+                    New Conversation
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>New Conversation</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Contact Name *</Label>
+                      <Input value={newConvoName} onChange={e => setNewConvoName(e.target.value)} placeholder="John Smith" />
                     </div>
-                  ))}
-                </div>
-              </DialogContent>
-            </Dialog>
+                    <div>
+                      <Label>Phone Number *</Label>
+                      <Input value={newConvoPhone} onChange={e => setNewConvoPhone(e.target.value)} placeholder="+1 555-0101" />
+                    </div>
+                    <div>
+                      <Label>Company</Label>
+                      <Input value={newConvoCompany} onChange={e => setNewConvoCompany(e.target.value)} placeholder="Acme Inc" />
+                    </div>
+                    <Button onClick={handleCreateConversation} disabled={!newConvoName.trim() || !newConvoPhone.trim()} className="w-full">
+                      Create Conversation
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+              <Dialog open={showTemplates} onOpenChange={setShowTemplates}>
+                <DialogTrigger asChild>
+                  <Button className="gap-2">
+                    <FileText className="w-4 h-4" />
+                    Templates
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Message Templates</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+                    {["Greeting", "Sales", "Follow-up", "General"].map((category) => (
+                      <div key={category}>
+                        <h3 className="font-semibold text-sm text-muted-foreground mb-2">{category}</h3>
+                        <div className="grid gap-2">
+                          {messageTemplates
+                            .filter((t) => t.category === category)
+                            .map((template) => (
+                              <Card
+                                key={template.id}
+                                className="cursor-pointer hover:bg-accent transition-colors"
+                                onClick={() => handleTemplateSelect(template)}
+                              >
+                                <CardContent className="p-4">
+                                  <div className="flex justify-between items-start">
+                                    <div>
+                                      <p className="font-medium">{template.name}</p>
+                                      <p className="text-sm text-muted-foreground mt-1">
+                                        {template.content}
+                                      </p>
+                                    </div>
+                                    <Button variant="ghost" size="sm">
+                                      Use
+                                    </Button>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
 
           {/* Main Chat Interface */}
@@ -260,7 +436,7 @@ export default function WhatsApp() {
                   <MessageCircle className="w-5 h-5" />
                   Conversations
                   <Badge variant="secondary" className="ml-auto">
-                    {conversations.filter(c => c.unread > 0).length} unread
+                    {conversations.filter(c => c.unread_count > 0).length} unread
                   </Badge>
                 </CardTitle>
                 <div className="relative mt-4">
@@ -276,37 +452,44 @@ export default function WhatsApp() {
               <CardContent className="flex-1 overflow-hidden p-0">
                 <ScrollArea className="h-full">
                   <div className="space-y-1 p-4">
+                    {filteredConversations.length === 0 && (
+                      <p className="text-sm text-muted-foreground text-center py-8">
+                        No conversations yet. Start one!
+                      </p>
+                    )}
                     {filteredConversations.map((conversation) => (
                       <div
                         key={conversation.id}
-                        onClick={() => handleSelectConversation(conversation)}
+                        onClick={() => setSelectedConversation(conversation)}
                         className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all hover:bg-accent ${
-                          selectedConversation.id === conversation.id 
-                            ? "bg-accent border-l-4 border-primary" 
+                          selectedConversation?.id === conversation.id
+                            ? "bg-accent border-l-4 border-primary"
                             : ""
                         }`}
                       >
                         <div className="relative">
                           <Avatar>
                             <AvatarFallback className="bg-primary text-primary-foreground">
-                              {conversation.avatar}
+                              {conversation.contact_avatar || conversation.contact_name.slice(0, 2).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
-                          {conversation.online && (
+                          {conversation.is_online && (
                             <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full" />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-start">
-                            <p className="font-semibold truncate">{conversation.name}</p>
-                            <span className="text-xs text-muted-foreground">{conversation.time}</span>
+                            <p className="font-semibold truncate">{conversation.contact_name}</p>
+                            <span className="text-xs text-muted-foreground">
+                              {conversation.last_message_at ? formatTime(conversation.last_message_at) : ""}
+                            </span>
                           </div>
-                          <p className="text-sm text-muted-foreground truncate">{conversation.company}</p>
-                          <p className="text-sm text-muted-foreground truncate">{conversation.lastMessage}</p>
+                          <p className="text-sm text-muted-foreground truncate">{conversation.contact_company}</p>
+                          <p className="text-sm text-muted-foreground truncate">{conversation.last_message || "No messages yet"}</p>
                         </div>
-                        {conversation.unread > 0 && (
+                        {conversation.unread_count > 0 && (
                           <Badge className="bg-primary text-primary-foreground">
-                            {conversation.unread}
+                            {conversation.unread_count}
                           </Badge>
                         )}
                       </div>
@@ -318,145 +501,180 @@ export default function WhatsApp() {
 
             {/* Chat Area */}
             <Card className="md:col-span-8 flex flex-col h-96 md:h-auto">
-              {/* Chat Header */}
-              <CardHeader className="border-b py-4">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <Avatar className="w-10 h-10">
-                        <AvatarFallback className="bg-primary text-primary-foreground">
-                          {selectedConversation.avatar}
-                        </AvatarFallback>
-                      </Avatar>
-                      {selectedConversation.online && (
-                        <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-semibold">{selectedConversation.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {selectedConversation.online ? (
-                          <span className="text-green-500">Online</span>
-                        ) : (
-                          selectedConversation.company
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => toast.info("Starting voice call...")}>
-                      <Phone className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => toast.info("Starting video call...")}>
-                      <Video className="w-4 h-4" />
-                    </Button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>View Contact</DropdownMenuItem>
-                        <DropdownMenuItem>Search Messages</DropdownMenuItem>
-                        <DropdownMenuItem>Clear Chat</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">Block Contact</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              </CardHeader>
-
-              {/* Messages */}
-              <CardContent className="flex-1 overflow-hidden p-0">
-                <ScrollArea className="h-full p-6">
-                  <div className="space-y-4">
-                    {messages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`flex ${message.sender === "me" ? "justify-end" : "justify-start"}`}
-                      >
-                        <div
-                          className={`max-w-[70%] rounded-2xl p-3 ${
-                            message.sender === "me"
-                              ? "bg-primary text-primary-foreground rounded-br-md"
-                              : "bg-accent text-accent-foreground rounded-bl-md"
-                          }`}
-                        >
-                          <p className="whitespace-pre-wrap">{message.text}</p>
-                          <div className={`flex items-center gap-1 mt-1 ${
-                            message.sender === "me" ? "justify-end" : ""
-                          }`}>
-                            <span className="text-xs opacity-70">{message.time}</span>
-                            {message.sender === "me" && getStatusIcon(message.status)}
-                          </div>
+              {selectedConversation ? (
+                <>
+                  {/* Chat Header */}
+                  <CardHeader className="border-b py-4">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <Avatar className="w-10 h-10">
+                            <AvatarFallback className="bg-primary text-primary-foreground">
+                              {selectedConversation.contact_avatar || selectedConversation.contact_name.slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          {selectedConversation.is_online && (
+                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-semibold">{selectedConversation.contact_name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {selectedConversation.is_online ? (
+                              <span className="text-green-500">Online</span>
+                            ) : (
+                              selectedConversation.contact_company || selectedConversation.contact_phone
+                            )}
+                          </p>
                         </div>
                       </div>
-                    ))}
-                    <div ref={messagesEndRef} />
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => toast.info("Starting voice call...")}>
+                          <Phone className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => toast.info("Starting video call...")}>
+                          <Video className="w-4 h-4" />
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>View Contact</DropdownMenuItem>
+                            <DropdownMenuItem>Search Messages</DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={async () => {
+                                await supabase.from("whatsapp_messages").delete().eq("conversation_id", selectedConversation.id);
+                                setMessages([]);
+                                toast.success("Chat cleared");
+                              }}
+                            >
+                              Clear Chat
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onClick={async () => {
+                                await supabase.from("whatsapp_conversations").delete().eq("id", selectedConversation.id);
+                                setConversations(prev => prev.filter(c => c.id !== selectedConversation.id));
+                                setSelectedConversation(conversations.find(c => c.id !== selectedConversation.id) || null);
+                                setMessages([]);
+                                toast.success("Conversation deleted");
+                              }}
+                            >
+                              Delete Conversation
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  </CardHeader>
+
+                  {/* Messages */}
+                  <CardContent className="flex-1 overflow-hidden p-0">
+                    <ScrollArea className="h-full p-6">
+                      <div className="space-y-4">
+                        {messages.length === 0 && (
+                          <p className="text-sm text-muted-foreground text-center py-8">
+                            No messages yet. Send the first one!
+                          </p>
+                        )}
+                        {messages.map((message) => (
+                          <div
+                            key={message.id}
+                            className={`flex ${message.sender === "me" ? "justify-end" : "justify-start"}`}
+                          >
+                            <div
+                              className={`max-w-[70%] rounded-2xl p-3 ${
+                                message.sender === "me"
+                                  ? "bg-primary text-primary-foreground rounded-br-md"
+                                  : "bg-accent text-accent-foreground rounded-bl-md"
+                              }`}
+                            >
+                              <p className="whitespace-pre-wrap">{message.text}</p>
+                              <div className={`flex items-center gap-1 mt-1 ${message.sender === "me" ? "justify-end" : ""}`}>
+                                <span className="text-xs opacity-70">
+                                  {new Date(message.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                </span>
+                                {message.sender === "me" && getStatusIcon(message.status)}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        <div ref={messagesEndRef} />
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+
+                  {/* Quick Templates */}
+                  <div className="border-t px-4 py-3">
+                    <p className="text-xs text-muted-foreground mb-2">Quick Templates</p>
+                    <div className="flex gap-2 overflow-x-auto pb-1">
+                      {messageTemplates.slice(0, 4).map((template) => (
+                        <Button
+                          key={template.id}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleTemplateSelect(template)}
+                          className="whitespace-nowrap text-xs"
+                        >
+                          {template.name}
+                        </Button>
+                      ))}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowTemplates(true)}
+                        className="whitespace-nowrap text-xs"
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        More
+                      </Button>
+                    </div>
                   </div>
-                </ScrollArea>
-              </CardContent>
 
-              {/* Quick Templates */}
-              <div className="border-t px-4 py-3">
-                <p className="text-xs text-muted-foreground mb-2">Quick Templates</p>
-                <div className="flex gap-2 overflow-x-auto pb-1">
-                  {messageTemplates.slice(0, 4).map((template) => (
-                    <Button
-                      key={template.id}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleTemplateSelect(template)}
-                      className="whitespace-nowrap text-xs"
-                    >
-                      {template.name}
-                    </Button>
-                  ))}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowTemplates(true)}
-                    className="whitespace-nowrap text-xs"
-                  >
-                    <Plus className="w-3 h-3 mr-1" />
-                    More
-                  </Button>
+                  {/* Message Input */}
+                  <div className="border-t p-4">
+                    <div className="flex gap-2 items-end">
+                      <Button variant="ghost" size="icon" className="shrink-0">
+                        <Paperclip className="w-4 h-4" />
+                      </Button>
+                      <Textarea
+                        placeholder="Type a message..."
+                        value={messageText}
+                        onChange={(e) => setMessageText(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendMessage();
+                          }
+                        }}
+                        className="resize-none min-h-[44px] max-h-32"
+                        rows={1}
+                      />
+                      <Button variant="ghost" size="icon" className="shrink-0">
+                        <Smile className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        onClick={handleSendMessage}
+                        size="icon"
+                        className="shrink-0"
+                        disabled={!messageText.trim()}
+                      >
+                        <Send className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="flex-1 flex items-center justify-center text-muted-foreground">
+                  <div className="text-center">
+                    <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>Select a conversation or start a new one</p>
+                  </div>
                 </div>
-              </div>
-
-              {/* Message Input */}
-              <div className="border-t p-4">
-                <div className="flex gap-2 items-end">
-                  <Button variant="ghost" size="icon" className="shrink-0">
-                    <Paperclip className="w-4 h-4" />
-                  </Button>
-                  <Textarea
-                    placeholder="Type a message..."
-                    value={messageText}
-                    onChange={(e) => setMessageText(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSendMessage();
-                      }
-                    }}
-                    className="resize-none min-h-[44px] max-h-32"
-                    rows={1}
-                  />
-                  <Button variant="ghost" size="icon" className="shrink-0">
-                    <Smile className="w-4 h-4" />
-                  </Button>
-                  <Button 
-                    onClick={handleSendMessage} 
-                    size="icon"
-                    className="shrink-0"
-                    disabled={!messageText.trim()}
-                  >
-                    <Send className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
+              )}
             </Card>
           </div>
         </div>
