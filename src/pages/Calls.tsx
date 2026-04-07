@@ -166,7 +166,7 @@ export default function Calls() {
     setDialNumber(prev => prev.slice(0, -1));
   };
 
-  const handleCall = (contact?: Contact) => {
+  const handleCall = async (contact?: Contact) => {
     const number = contact?.phone || dialNumber;
     if (!number) return;
 
@@ -174,6 +174,43 @@ export default function Calls() {
     if (contact?.phone) {
       setDialNumber(contact.phone);
     }
+
+    const isTwilioConfigured = selectedTwilioNumber && agentPhone;
+    
+    if (isTwilioConfigured) {
+      // Try Twilio first
+      const result = await makeTwilioCall(number);
+      if (result.success) {
+        // Log the call in DB too
+        if (user) {
+          await supabase.from("calls").insert({
+            user_id: user.id,
+            phone_number: number,
+            contact_id: contact?.id || selectedContact?.id || null,
+            contact_name: contact
+              ? `${contact.first_name} ${contact.last_name}`
+              : selectedContact
+                ? `${selectedContact.first_name} ${selectedContact.last_name}`
+                : null,
+            company_name: contact?.companies?.name || selectedContact?.companies?.name || null,
+            call_type: "outgoing" as const,
+            status: "completed" as const,
+            duration_seconds: 0,
+            notes: `Twilio call initiated (SID: ${result.callSid})`,
+          });
+          fetchCalls();
+        }
+        return;
+      }
+      // Twilio failed — fall through to manual log
+      toast({
+        title: "Twilio unavailable",
+        description: "Falling back to manual call logging.",
+        variant: "default",
+      });
+    }
+
+    // Manual log dialog
     setShowCallDialog(true);
   };
 
