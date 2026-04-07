@@ -524,11 +524,25 @@ export default function Calls() {
                     </Button>
                     <Button
                       onClick={() => handleCall()}
-                      disabled={!dialNumber}
+                      disabled={!dialNumber || isTwilioCalling}
                       className="flex-1 gap-2"
                     >
-                      <Phone className="w-4 h-4" />
-                      Call
+                      {isTwilioCalling ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Connecting...
+                        </>
+                      ) : selectedTwilioNumber && agentPhone ? (
+                        <>
+                          <PhoneForwarded className="w-4 h-4" />
+                          Call via Twilio
+                        </>
+                      ) : (
+                        <>
+                          <Phone className="w-4 h-4" />
+                          Call
+                        </>
+                      )}
                     </Button>
                   </div>
                   <Button
