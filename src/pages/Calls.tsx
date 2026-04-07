@@ -83,6 +83,13 @@ export default function Calls() {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (!twilioLoaded) {
+      fetchTwilioNumbers();
+      setTwilioLoaded(true);
+    }
+  }, [twilioLoaded, fetchTwilioNumbers]);
+
   const fetchCalls = async () => {
     try {
       const { data, error } = await supabase
