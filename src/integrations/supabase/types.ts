@@ -929,6 +929,89 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_conversations: {
+        Row: {
+          contact_avatar: string | null
+          contact_company: string | null
+          contact_name: string
+          contact_phone: string
+          created_at: string
+          id: string
+          is_online: boolean | null
+          last_message: string | null
+          last_message_at: string | null
+          unread_count: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contact_avatar?: string | null
+          contact_company?: string | null
+          contact_name: string
+          contact_phone: string
+          created_at?: string
+          id?: string
+          is_online?: boolean | null
+          last_message?: string | null
+          last_message_at?: string | null
+          unread_count?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contact_avatar?: string | null
+          contact_company?: string | null
+          contact_name?: string
+          contact_phone?: string
+          created_at?: string
+          id?: string
+          is_online?: boolean | null
+          last_message?: string | null
+          last_message_at?: string | null
+          unread_count?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      whatsapp_messages: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          id: string
+          sender: string
+          status: string
+          text: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          id?: string
+          sender: string
+          status?: string
+          text: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          sender?: string
+          status?: string
+          text?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
