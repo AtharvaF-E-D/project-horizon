@@ -554,14 +554,63 @@ export default function Calls() {
                     <Calendar className="w-4 h-4" />
                     Schedule Call
                   </Button>
+                  {/* Twilio Settings */}
+                  <Collapsible open={showTwilioSettings} onOpenChange={setShowTwilioSettings}>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="sm" className="w-full gap-2 text-xs text-muted-foreground">
+                        <Settings2 className="w-3 h-3" />
+                        {showTwilioSettings ? "Hide Twilio Settings" : "Configure Twilio (for live calls)"}
+                        {selectedTwilioNumber && agentPhone && (
+                          <Badge variant="default" className="text-[10px] ml-1">Ready</Badge>
+                        )}
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="space-y-3 pt-2">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Twilio Phone Number (Caller ID)</Label>
+                        {isLoadingNumbers ? (
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground p-2">
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            Loading numbers...
+                          </div>
+                        ) : twilioNumbers.length > 0 ? (
+                          <Select value={selectedTwilioNumber} onValueChange={setSelectedTwilioNumber}>
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue placeholder="Select Twilio number" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {twilioNumbers.map((num) => (
+                                <SelectItem key={num.sid} value={num.phoneNumber}>
+                                  {num.friendlyName} ({num.phoneNumber})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <div className="text-xs text-muted-foreground p-2 border rounded-md bg-muted/50">
+                            No Twilio numbers found.{" "}
+                            <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={fetchTwilioNumbers}>
+                              Retry
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Your Phone Number (receives calls)</Label>
+                        <Input
+                          value={agentPhone}
+                          onChange={(e) => setAgentPhone(e.target.value)}
+                          placeholder="+1234567890"
+                          className="h-8 text-xs"
+                        />
+                        <p className="text-[10px] text-muted-foreground">
+                          E.164 format. When configured, clicking Call will ring this phone first, then connect to the customer.
+                        </p>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
                 </CardContent>
               </Card>
-
-              {/* Twilio Click-to-Call */}
-              <TwilioDialer
-                dialNumber={dialNumber}
-                contactName={selectedContact ? `${selectedContact.first_name} ${selectedContact.last_name}` : null}
-              />
 
               {/* Quick Contacts */}
               <Card>
