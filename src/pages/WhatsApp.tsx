@@ -603,6 +603,10 @@ export default function WhatsApp() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem>View Contact</DropdownMenuItem>
                             <DropdownMenuItem>Search Messages</DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleSimulateReply} className="gap-2">
+                              <BotMessageSquare className="w-4 h-4" />
+                              Simulate Reply
+                            </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={async () => {
                                 await supabase.from("whatsapp_messages").delete().eq("conversation_id", selectedConversation.id);
