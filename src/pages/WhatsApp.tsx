@@ -296,6 +296,64 @@ export default function WhatsApp() {
     toast.info(`Template "${template.name}" selected`);
   };
 
+  const simulatedReplies = [
+    "Sure, I'd be happy to discuss that further!",
+    "Thanks for getting back to me. Let me check on that.",
+    "That sounds great! When can we schedule a call?",
+    "I've reviewed the proposal and I have a few questions.",
+    "Perfect, I'll send over the documents shortly.",
+    "Can you share more details about the pricing?",
+    "We're very interested. Let's move forward with this.",
+    "I need to discuss this with my team first. I'll get back to you.",
+    "Could you send me a demo link?",
+    "That works for us. Let's finalize the agreement.",
+  ];
+
+  const handleSimulateReply = async () => {
+    if (!selectedConversation || !user) return;
+
+    const replyText = simulatedReplies[Math.floor(Math.random() * simulatedReplies.length)];
+
+    // Insert as incoming message after a short delay for realism
+    toast.info("Simulating incoming message...");
+    setTimeout(async () => {
+      const { error } = await supabase
+        .from("whatsapp_messages")
+        .insert({
+          conversation_id: selectedConversation.id,
+          user_id: user.id,
+          sender: "them",
+          text: replyText,
+          status: "read",
+        });
+
+      if (error) {
+        toast.error("Failed to simulate reply");
+        return;
+      }
+
+      // Update conversation metadata
+      await supabase
+        .from("whatsapp_conversations")
+        .update({
+          last_message: replyText,
+          last_message_at: new Date().toISOString(),
+          unread_count: (selectedConversation.unread_count || 0) + 1,
+        })
+        .eq("id", selectedConversation.id);
+
+      setConversations(prev =>
+        prev.map(c =>
+          c.id === selectedConversation.id
+            ? { ...c, last_message: replyText, last_message_at: new Date().toISOString() }
+            : c
+        )
+      );
+
+      toast.success(`${selectedConversation.contact_name} replied!`);
+    }, 1500);
+  };
+
   const formatTime = (isoString: string) => {
     const date = new Date(isoString);
     const now = new Date();
