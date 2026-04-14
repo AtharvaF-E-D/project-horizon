@@ -137,6 +137,18 @@ const Contacts = () => {
                               <span>{contact.phone}</span>
                             </div>
                           )}
+                          {contact.phone && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/whatsapp?contact_id=${contact.id}`);
+                              }}
+                              className="flex items-center gap-1 text-primary hover:underline"
+                            >
+                              <MessageCircle className="h-3 w-3" />
+                              <span>Chat</span>
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
