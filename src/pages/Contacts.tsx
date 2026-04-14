@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Plus, Search, Mail, Phone } from "lucide-react";
+import { Plus, Search, Mail, Phone, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -136,6 +136,18 @@ const Contacts = () => {
                               <Phone className="h-3 w-3" />
                               <span>{contact.phone}</span>
                             </div>
+                          )}
+                          {contact.phone && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/whatsapp?contact_id=${contact.id}`);
+                              }}
+                              className="flex items-center gap-1 text-primary hover:underline"
+                            >
+                              <MessageCircle className="h-3 w-3" />
+                              <span>Chat</span>
+                            </button>
                           )}
                         </div>
                       </div>

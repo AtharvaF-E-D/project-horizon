@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Loader2, Trash2 } from "lucide-react";
+import { ArrowLeft, Loader2, Trash2, MessageCircle } from "lucide-react";
 
 const ContactDetails = () => {
   const { id } = useParams();
@@ -75,8 +75,6 @@ const ContactDetails = () => {
       });
     }
   };
-
-  
 
   const handleSave = async () => {
     if (!firstName.trim() || !lastName.trim()) {
@@ -148,6 +146,11 @@ const ContactDetails = () => {
     }
   };
 
+  const handleStartWhatsApp = () => {
+    if (!id || isNew) return;
+    navigate(`/whatsapp?contact_id=${id}`);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <DashboardNavbar />
@@ -163,10 +166,16 @@ const ContactDetails = () => {
               Back to Contacts
             </Button>
 
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold mb-2">
+            <div className="mb-8 flex justify-between items-center">
+              <h1 className="text-3xl font-bold">
                 {isNew ? "New Contact" : "Edit Contact"}
               </h1>
+              {!isNew && phone && (
+                <Button variant="outline" onClick={handleStartWhatsApp} className="gap-2">
+                  <MessageCircle className="h-4 w-4" />
+                  WhatsApp Chat
+                </Button>
+              )}
             </div>
 
             <Card className="p-6">
