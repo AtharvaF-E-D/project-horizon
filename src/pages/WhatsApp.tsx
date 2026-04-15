@@ -128,7 +128,9 @@ export default function WhatsApp() {
   const [globalSearchResults, setGlobalSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   // Handle contact_id from URL params (CRM integration)
   useEffect(() => {
     if (!user) return;
@@ -225,6 +227,9 @@ export default function WhatsApp() {
           text: m.text,
           status: m.status as Message["status"],
           created_at: m.created_at,
+          file_url: m.file_url,
+          file_name: m.file_name,
+          file_type: m.file_type,
         })));
       }
     };
@@ -267,6 +272,9 @@ export default function WhatsApp() {
               text: m.text,
               status: m.status,
               created_at: m.created_at,
+              file_url: m.file_url,
+              file_name: m.file_name,
+              file_type: m.file_type,
             }];
           });
           // Hide typing indicator when message arrives
