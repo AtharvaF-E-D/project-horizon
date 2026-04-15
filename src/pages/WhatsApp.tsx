@@ -1022,8 +1022,35 @@ export default function WhatsApp() {
 
                   {/* Message Input */}
                   <div className="border-t p-4">
+                    {attachmentFile && (
+                      <div className="flex items-center gap-2 mb-2 p-2 bg-accent rounded-lg">
+                        {attachmentFile.type.startsWith("image/") ? (
+                          <ImageIcon className="w-4 h-4 text-muted-foreground shrink-0" />
+                        ) : (
+                          <File className="w-4 h-4 text-muted-foreground shrink-0" />
+                        )}
+                        <span className="text-sm truncate flex-1">{attachmentFile.name}</span>
+                        <span className="text-xs text-muted-foreground">{(attachmentFile.size / 1024).toFixed(0)}KB</span>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={removeAttachment}>
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    )}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      className="hidden"
+                      accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.zip"
+                      onChange={handleFileSelect}
+                    />
                     <div className="flex gap-2 items-end">
-                      <Button variant="ghost" size="icon" className="shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading}
+                      >
                         <Paperclip className="w-4 h-4" />
                       </Button>
                       <Textarea
@@ -1046,9 +1073,9 @@ export default function WhatsApp() {
                         onClick={handleSendMessage}
                         size="icon"
                         className="shrink-0"
-                        disabled={!messageText.trim()}
+                        disabled={(!messageText.trim() && !attachmentFile) || uploading}
                       >
-                        <Send className="w-4 h-4" />
+                        {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                       </Button>
                     </div>
                   </div>
