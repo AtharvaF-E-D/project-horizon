@@ -38,6 +38,9 @@ import {
   Loader2,
   BotMessageSquare,
   X,
+  Image as ImageIcon,
+  File,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,6 +66,9 @@ interface Message {
   text: string;
   status: "sending" | "sent" | "delivered" | "read";
   created_at: string;
+  file_url?: string | null;
+  file_name?: string | null;
+  file_type?: string | null;
 }
 
 interface Template {
@@ -122,7 +128,9 @@ export default function WhatsApp() {
   const [globalSearchResults, setGlobalSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   // Handle contact_id from URL params (CRM integration)
   useEffect(() => {
     if (!user) return;
@@ -219,6 +227,9 @@ export default function WhatsApp() {
           text: m.text,
           status: m.status as Message["status"],
           created_at: m.created_at,
+          file_url: m.file_url,
+          file_name: m.file_name,
+          file_type: m.file_type,
         })));
       }
     };
@@ -261,6 +272,9 @@ export default function WhatsApp() {
               text: m.text,
               status: m.status,
               created_at: m.created_at,
+              file_url: m.file_url,
+              file_name: m.file_name,
+              file_type: m.file_type,
             }];
           });
           // Hide typing indicator when message arrives
@@ -333,11 +347,51 @@ export default function WhatsApp() {
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!messageText.trim() || !selectedConversation || !user) return;
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File must be under 10MB");
+      return;
+    }
+    setAttachmentFile(file);
+  };
 
-    const text = messageText.trim();
+  const removeAttachment = () => {
+    setAttachmentFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const uploadFile = async (file: File): Promise<{ url: string; name: string; type: string } | null> => {
+    if (!user) return null;
+    const ext = file.name.split(".").pop();
+    const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from("whatsapp-attachments").upload(path, file);
+    if (error) {
+      toast.error("File upload failed");
+      return null;
+    }
+    const { data: urlData } = supabase.storage.from("whatsapp-attachments").getPublicUrl(path);
+    return { url: urlData.publicUrl, name: file.name, type: file.type };
+  };
+
+  const handleSendMessage = async () => {
+    if ((!messageText.trim() && !attachmentFile) || !selectedConversation || !user) return;
+
+    const text = messageText.trim() || (attachmentFile ? `📎 ${attachmentFile.name}` : "");
+    const file = attachmentFile;
     setMessageText("");
+    setAttachmentFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+
+    // Upload file if present
+    let fileData: { url: string; name: string; type: string } | null = null;
+    if (file) {
+      setUploading(true);
+      fileData = await uploadFile(file);
+      setUploading(false);
+      if (!fileData) return;
+    }
 
     // Optimistic UI
     const tempId = crypto.randomUUID();
@@ -347,6 +401,9 @@ export default function WhatsApp() {
       text,
       status: "sending",
       created_at: new Date().toISOString(),
+      file_url: fileData?.url,
+      file_name: fileData?.name,
+      file_type: fileData?.type,
     };
     setMessages(prev => [...prev, optimisticMsg]);
 
@@ -358,6 +415,9 @@ export default function WhatsApp() {
         sender: "me",
         text,
         status: "sent",
+        file_url: fileData?.url || null,
+        file_name: fileData?.name || null,
+        file_type: fileData?.type || null,
       })
       .select()
       .single();
@@ -375,18 +435,23 @@ export default function WhatsApp() {
       text: data.text,
       status: data.status as Message["status"],
       created_at: data.created_at,
+      file_url: data.file_url,
+      file_name: data.file_name,
+      file_type: data.file_type,
     } : m));
+
+    const displayText = fileData ? `📎 ${fileData.name}` : text;
 
     // Update conversation last_message
     await supabase
       .from("whatsapp_conversations")
-      .update({ last_message: text, last_message_at: new Date().toISOString() })
+      .update({ last_message: displayText, last_message_at: new Date().toISOString() })
       .eq("id", selectedConversation.id);
 
     setConversations(prev =>
       prev.map(c =>
         c.id === selectedConversation.id
-          ? { ...c, last_message: text, last_message_at: new Date().toISOString() }
+          ? { ...c, last_message: displayText, last_message_at: new Date().toISOString() }
           : c
       )
     );
@@ -872,7 +937,9 @@ export default function WhatsApp() {
                             No messages yet. Send the first one!
                           </p>
                         )}
-                        {messages.map((message) => (
+                        {messages.map((message) => {
+                          const isImage = message.file_type?.startsWith("image/");
+                          return (
                           <div
                             key={message.id}
                             className={`flex ${message.sender === "me" ? "justify-end" : "justify-start"}`}
@@ -884,7 +951,32 @@ export default function WhatsApp() {
                                   : "bg-accent text-accent-foreground rounded-bl-md"
                               }`}
                             >
-                              <p className="whitespace-pre-wrap">{message.text}</p>
+                              {message.file_url && isImage && (
+                                <a href={message.file_url} target="_blank" rel="noopener noreferrer" className="block mb-2">
+                                  <img
+                                    src={message.file_url}
+                                    alt={message.file_name || "Image"}
+                                    className="rounded-lg max-h-60 w-auto object-cover"
+                                  />
+                                </a>
+                              )}
+                              {message.file_url && !isImage && (
+                                <a
+                                  href={message.file_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={`flex items-center gap-2 p-2 rounded-lg mb-2 ${
+                                    message.sender === "me" ? "bg-primary-foreground/10" : "bg-background/50"
+                                  }`}
+                                >
+                                  <File className="w-5 h-5 shrink-0" />
+                                  <span className="text-sm truncate">{message.file_name || "File"}</span>
+                                  <Download className="w-4 h-4 shrink-0 ml-auto" />
+                                </a>
+                              )}
+                              {message.text && !(message.file_url && message.text === `📎 ${message.file_name}`) && (
+                                <p className="whitespace-pre-wrap">{message.text}</p>
+                              )}
                               <div className={`flex items-center gap-1 mt-1 ${message.sender === "me" ? "justify-end" : ""}`}>
                                 <span className="text-xs opacity-70">
                                   {new Date(message.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -893,7 +985,8 @@ export default function WhatsApp() {
                               </div>
                             </div>
                           </div>
-                        ))}
+                          );
+                        })}
                         {isTyping && <TypingIndicator contactName={selectedConversation.contact_name} />}
                         <div ref={messagesEndRef} />
                       </div>
@@ -929,8 +1022,35 @@ export default function WhatsApp() {
 
                   {/* Message Input */}
                   <div className="border-t p-4">
+                    {attachmentFile && (
+                      <div className="flex items-center gap-2 mb-2 p-2 bg-accent rounded-lg">
+                        {attachmentFile.type.startsWith("image/") ? (
+                          <ImageIcon className="w-4 h-4 text-muted-foreground shrink-0" />
+                        ) : (
+                          <File className="w-4 h-4 text-muted-foreground shrink-0" />
+                        )}
+                        <span className="text-sm truncate flex-1">{attachmentFile.name}</span>
+                        <span className="text-xs text-muted-foreground">{(attachmentFile.size / 1024).toFixed(0)}KB</span>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={removeAttachment}>
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    )}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      className="hidden"
+                      accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.zip"
+                      onChange={handleFileSelect}
+                    />
                     <div className="flex gap-2 items-end">
-                      <Button variant="ghost" size="icon" className="shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading}
+                      >
                         <Paperclip className="w-4 h-4" />
                       </Button>
                       <Textarea
@@ -953,9 +1073,9 @@ export default function WhatsApp() {
                         onClick={handleSendMessage}
                         size="icon"
                         className="shrink-0"
-                        disabled={!messageText.trim()}
+                        disabled={(!messageText.trim() && !attachmentFile) || uploading}
                       >
-                        <Send className="w-4 h-4" />
+                        {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                       </Button>
                     </div>
                   </div>
