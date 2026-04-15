@@ -347,11 +347,51 @@ export default function WhatsApp() {
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!messageText.trim() || !selectedConversation || !user) return;
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File must be under 10MB");
+      return;
+    }
+    setAttachmentFile(file);
+  };
 
-    const text = messageText.trim();
+  const removeAttachment = () => {
+    setAttachmentFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const uploadFile = async (file: File): Promise<{ url: string; name: string; type: string } | null> => {
+    if (!user) return null;
+    const ext = file.name.split(".").pop();
+    const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from("whatsapp-attachments").upload(path, file);
+    if (error) {
+      toast.error("File upload failed");
+      return null;
+    }
+    const { data: urlData } = supabase.storage.from("whatsapp-attachments").getPublicUrl(path);
+    return { url: urlData.publicUrl, name: file.name, type: file.type };
+  };
+
+  const handleSendMessage = async () => {
+    if ((!messageText.trim() && !attachmentFile) || !selectedConversation || !user) return;
+
+    const text = messageText.trim() || (attachmentFile ? `📎 ${attachmentFile.name}` : "");
+    const file = attachmentFile;
     setMessageText("");
+    setAttachmentFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+
+    // Upload file if present
+    let fileData: { url: string; name: string; type: string } | null = null;
+    if (file) {
+      setUploading(true);
+      fileData = await uploadFile(file);
+      setUploading(false);
+      if (!fileData) return;
+    }
 
     // Optimistic UI
     const tempId = crypto.randomUUID();
@@ -361,6 +401,9 @@ export default function WhatsApp() {
       text,
       status: "sending",
       created_at: new Date().toISOString(),
+      file_url: fileData?.url,
+      file_name: fileData?.name,
+      file_type: fileData?.type,
     };
     setMessages(prev => [...prev, optimisticMsg]);
 
@@ -372,6 +415,9 @@ export default function WhatsApp() {
         sender: "me",
         text,
         status: "sent",
+        file_url: fileData?.url || null,
+        file_name: fileData?.name || null,
+        file_type: fileData?.type || null,
       })
       .select()
       .single();
@@ -389,18 +435,23 @@ export default function WhatsApp() {
       text: data.text,
       status: data.status as Message["status"],
       created_at: data.created_at,
+      file_url: data.file_url,
+      file_name: data.file_name,
+      file_type: data.file_type,
     } : m));
+
+    const displayText = fileData ? `📎 ${fileData.name}` : text;
 
     // Update conversation last_message
     await supabase
       .from("whatsapp_conversations")
-      .update({ last_message: text, last_message_at: new Date().toISOString() })
+      .update({ last_message: displayText, last_message_at: new Date().toISOString() })
       .eq("id", selectedConversation.id);
 
     setConversations(prev =>
       prev.map(c =>
         c.id === selectedConversation.id
-          ? { ...c, last_message: text, last_message_at: new Date().toISOString() }
+          ? { ...c, last_message: displayText, last_message_at: new Date().toISOString() }
           : c
       )
     );
