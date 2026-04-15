@@ -38,6 +38,9 @@ import {
   Loader2,
   BotMessageSquare,
   X,
+  Image as ImageIcon,
+  File,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
