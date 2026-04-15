@@ -66,6 +66,9 @@ interface Message {
   text: string;
   status: "sending" | "sent" | "delivered" | "read";
   created_at: string;
+  file_url?: string | null;
+  file_name?: string | null;
+  file_type?: string | null;
 }
 
 interface Template {
