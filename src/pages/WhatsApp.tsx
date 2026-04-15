@@ -937,7 +937,9 @@ export default function WhatsApp() {
                             No messages yet. Send the first one!
                           </p>
                         )}
-                        {messages.map((message) => (
+                        {messages.map((message) => {
+                          const isImage = message.file_type?.startsWith("image/");
+                          return (
                           <div
                             key={message.id}
                             className={`flex ${message.sender === "me" ? "justify-end" : "justify-start"}`}
@@ -949,7 +951,32 @@ export default function WhatsApp() {
                                   : "bg-accent text-accent-foreground rounded-bl-md"
                               }`}
                             >
-                              <p className="whitespace-pre-wrap">{message.text}</p>
+                              {message.file_url && isImage && (
+                                <a href={message.file_url} target="_blank" rel="noopener noreferrer" className="block mb-2">
+                                  <img
+                                    src={message.file_url}
+                                    alt={message.file_name || "Image"}
+                                    className="rounded-lg max-h-60 w-auto object-cover"
+                                  />
+                                </a>
+                              )}
+                              {message.file_url && !isImage && (
+                                <a
+                                  href={message.file_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={`flex items-center gap-2 p-2 rounded-lg mb-2 ${
+                                    message.sender === "me" ? "bg-primary-foreground/10" : "bg-background/50"
+                                  }`}
+                                >
+                                  <File className="w-5 h-5 shrink-0" />
+                                  <span className="text-sm truncate">{message.file_name || "File"}</span>
+                                  <Download className="w-4 h-4 shrink-0 ml-auto" />
+                                </a>
+                              )}
+                              {message.text && !(message.file_url && message.text === `📎 ${message.file_name}`) && (
+                                <p className="whitespace-pre-wrap">{message.text}</p>
+                              )}
                               <div className={`flex items-center gap-1 mt-1 ${message.sender === "me" ? "justify-end" : ""}`}>
                                 <span className="text-xs opacity-70">
                                   {new Date(message.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -958,7 +985,8 @@ export default function WhatsApp() {
                               </div>
                             </div>
                           </div>
-                        ))}
+                          );
+                        })}
                         {isTyping && <TypingIndicator contactName={selectedConversation.contact_name} />}
                         <div ref={messagesEndRef} />
                       </div>
