@@ -371,8 +371,14 @@ export default function WhatsApp() {
       toast.error("File upload failed");
       return null;
     }
-    const { data: urlData } = supabase.storage.from("whatsapp-attachments").getPublicUrl(path);
-    return { url: urlData.publicUrl, name: file.name, type: file.type };
+    const { data: urlData, error: signErr } = await supabase.storage
+      .from("whatsapp-attachments")
+      .createSignedUrl(path, 60 * 60 * 24 * 365);
+    if (signErr || !urlData) {
+      toast.error("Could not generate file URL");
+      return null;
+    }
+    return { url: urlData.signedUrl, name: file.name, type: file.type };
   };
 
   const handleSendMessage = async () => {
