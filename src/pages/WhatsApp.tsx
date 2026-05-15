@@ -47,6 +47,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Label } from "@/components/ui/label";
 import { useSearchParams } from "react-router-dom";
+import { SuggestedReplies } from "@/components/ai/SuggestedReplies";
 
 interface Conversation {
   id: string;
