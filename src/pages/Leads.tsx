@@ -10,7 +10,7 @@ import { DashboardNavbar } from "@/components/layout/DashboardNavbar";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, Mail, Phone, Building, TrendingUp, Users, Target } from "lucide-react";
+import { Search, Plus, Mail, Phone, Building, TrendingUp, Users, Target, Flame, Snowflake, Smile } from "lucide-react";
 import { PermissionGate } from "@/components/common/PermissionGate";
 import { useUserRole } from "@/hooks/useUserRole";
 import { LeadsBulkActions } from "@/components/leads/LeadsBulkActions";
@@ -248,7 +248,7 @@ const Leads = () => {
                         onClick={() => navigate(`/leads/${lead.id}`)}
                       >
                         <div className="space-y-2 flex-1">
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 flex-wrap">
                             <h3 className="text-lg font-semibold">
                               {lead.first_name} {lead.last_name}
                             </h3>
@@ -256,6 +256,21 @@ const Leads = () => {
                               {lead.status}
                             </Badge>
                             <Badge variant="outline">{lead.source}</Badge>
+                            {(lead as any).ai_score_label === "Hot" && (
+                              <Badge variant="outline" className="bg-red-500/15 text-red-600 border-red-500/30">
+                                <Flame className="w-3 h-3 mr-1" /> Hot
+                              </Badge>
+                            )}
+                            {(lead as any).ai_score_label === "Warm" && (
+                              <Badge variant="outline" className="bg-yellow-500/15 text-yellow-700 border-yellow-500/30">
+                                <Smile className="w-3 h-3 mr-1" /> Warm
+                              </Badge>
+                            )}
+                            {(lead as any).ai_score_label === "Cold" && (
+                              <Badge variant="outline" className="bg-blue-500/15 text-blue-600 border-blue-500/30">
+                                <Snowflake className="w-3 h-3 mr-1" /> Cold
+                              </Badge>
+                            )}
                           </div>
                           <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                             {lead.company && (
