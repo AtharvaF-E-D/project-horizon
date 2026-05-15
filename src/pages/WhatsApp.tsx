@@ -47,6 +47,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Label } from "@/components/ui/label";
 import { useSearchParams } from "react-router-dom";
+import { SuggestedReplies } from "@/components/ai/SuggestedReplies";
 
 interface Conversation {
   id: string;
@@ -1027,7 +1028,12 @@ export default function WhatsApp() {
                   </div>
 
                   {/* Message Input */}
-                  <div className="border-t p-4">
+                  <div className="border-t">
+                    <SuggestedReplies
+                      recentMessages={messages.map(m => ({ sender: (m as any).sender, text: (m as any).text }))}
+                      onPick={(t) => setMessageText(t)}
+                    />
+                  <div className="p-4">
                     {attachmentFile && (
                       <div className="flex items-center gap-2 mb-2 p-2 bg-accent rounded-lg">
                         {attachmentFile.type.startsWith("image/") ? (
@@ -1083,6 +1089,7 @@ export default function WhatsApp() {
                       >
                         {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                       </Button>
+                    </div>
                     </div>
                   </div>
                 </>

@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Loader2, Trash2 } from "lucide-react";
+import { LeadAIPanel } from "@/components/ai/LeadAIPanel";
 
 const LeadDetails = () => {
   const { id } = useParams();
@@ -28,6 +29,7 @@ const LeadDetails = () => {
   const [status, setStatus] = useState("new");
   const [score, setScore] = useState("0");
   const [notes, setNotes] = useState("");
+  const [aiData, setAiData] = useState<{ ai_score_label?: string | null; ai_summary?: string | null; ai_next_action?: string | null }>({});
 
   useEffect(() => {
     if (!isNew) {
@@ -56,6 +58,11 @@ const LeadDetails = () => {
         setStatus(data.status || "new");
         setScore(data.score?.toString() || "0");
         setNotes(data.notes || "");
+        setAiData({
+          ai_score_label: (data as any).ai_score_label,
+          ai_summary: (data as any).ai_summary,
+          ai_next_action: (data as any).ai_next_action,
+        });
       }
     } catch (error: any) {
       toast({
@@ -145,7 +152,8 @@ const LeadDetails = () => {
       <DashboardNavbar />
       <DashboardNav />
       <main className="ml-64 pt-20 px-4 pb-4 md:px-8 md:pb-8">
-        <div className="max-w-2xl">
+        <div className="max-w-5xl grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2">
           <Button
             variant="ghost"
             onClick={() => navigate("/leads")}
@@ -299,6 +307,17 @@ const LeadDetails = () => {
               </div>
             </div>
           </Card>
+          </div>
+          {!isNew && id && (
+            <div className="lg:col-span-1">
+              <LeadAIPanel
+                leadId={id}
+                leadData={{ first_name: firstName, last_name: lastName, email, phone, company, title, status, source, score, notes }}
+                initial={aiData}
+                onUpdated={(p) => setAiData({ ai_score_label: p.ai_score_label, ai_summary: p.ai_summary, ai_next_action: p.ai_next_action })}
+              />
+            </div>
+          )}
         </div>
       </main>
     </div>
