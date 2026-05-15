@@ -34,9 +34,13 @@ const AIAssistant = () => {
 
   const suggestions = [
     { icon: TrendingUp, text: "Analyze my sales pipeline performance", color: "text-primary" },
-    { icon: Users, text: "What leads should I prioritize this week?", color: "text-secondary" },
-    { icon: Calendar, text: "Help me plan my follow-up schedule", color: "text-accent" },
-    { icon: Mail, text: "Draft a professional follow-up email", color: "text-purple-500" },
+    { icon: Users, text: "Which leads should I prioritize this week and why?", color: "text-secondary" },
+    { icon: Calendar, text: "Generate a follow-up plan for my warm leads", color: "text-accent" },
+    { icon: Mail, text: "Draft a professional follow-up email for a stalled deal", color: "text-purple-500" },
+    { icon: Sparkles, text: "Summarize today's calls and surface key risks", color: "text-primary" },
+    { icon: Sparkles, text: "Create a WhatsApp campaign for inactive customers", color: "text-secondary" },
+    { icon: Sparkles, text: "Write a cold outreach script for my top industry", color: "text-accent" },
+    { icon: Sparkles, text: "Suggest 5 ways to improve my close rate", color: "text-purple-500" },
   ];
 
   useEffect(() => {
