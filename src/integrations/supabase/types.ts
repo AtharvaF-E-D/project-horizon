@@ -106,7 +106,9 @@ export type Database = {
           notes: string | null
           phone_number: string
           scheduled_at: string | null
+          sentiment: string | null
           status: Database["public"]["Enums"]["call_status"]
+          transcript: string | null
           user_id: string
         }
         Insert: {
@@ -122,7 +124,9 @@ export type Database = {
           notes?: string | null
           phone_number: string
           scheduled_at?: string | null
+          sentiment?: string | null
           status?: Database["public"]["Enums"]["call_status"]
+          transcript?: string | null
           user_id: string
         }
         Update: {
@@ -138,7 +142,9 @@ export type Database = {
           notes?: string | null
           phone_number?: string
           scheduled_at?: string | null
+          sentiment?: string | null
           status?: Database["public"]["Enums"]["call_status"]
+          transcript?: string | null
           user_id?: string
         }
         Relationships: [
@@ -473,6 +479,10 @@ export type Database = {
       }
       leads: {
         Row: {
+          ai_next_action: string | null
+          ai_score_label: string | null
+          ai_summary: string | null
+          ai_updated_at: string | null
           company: string | null
           created_at: string | null
           email: string | null
@@ -489,6 +499,10 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ai_next_action?: string | null
+          ai_score_label?: string | null
+          ai_summary?: string | null
+          ai_updated_at?: string | null
           company?: string | null
           created_at?: string | null
           email?: string | null
@@ -505,6 +519,10 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ai_next_action?: string | null
+          ai_score_label?: string | null
+          ai_summary?: string | null
+          ai_updated_at?: string | null
           company?: string | null
           created_at?: string | null
           email?: string | null
@@ -976,6 +994,7 @@ export type Database = {
       }
       whatsapp_messages: {
         Row: {
+          ai_intent: string | null
           conversation_id: string
           created_at: string
           file_name: string | null
@@ -988,6 +1007,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ai_intent?: string | null
           conversation_id: string
           created_at?: string
           file_name?: string | null
@@ -1000,6 +1020,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ai_intent?: string | null
           conversation_id?: string
           created_at?: string
           file_name?: string | null
