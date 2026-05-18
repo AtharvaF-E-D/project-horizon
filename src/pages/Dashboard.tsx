@@ -130,6 +130,29 @@ const Dashboard = () => {
             )}
           </div>
 
+          {/* AI Daily Overview */}
+          <Card className="p-6 border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-secondary/5">
+            <div className="flex items-start justify-between gap-4 mb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-primary-foreground" />
+                </div>
+                <div>
+                  <h3 className="font-heading text-lg font-semibold">AI Daily Overview</h3>
+                  <p className="text-xs text-muted-foreground">Snapshot of pipeline health and priorities</p>
+                </div>
+              </div>
+              <Button size="sm" variant="outline" onClick={generateOverview} disabled={aiLoading || !stats}>
+                {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 mr-1" />}
+                {aiSummary ? "Refresh" : "Generate"}
+              </Button>
+            </div>
+            <p className="text-sm whitespace-pre-wrap leading-relaxed">
+              {aiSummary ||
+                'Tap "Generate" to get a real-time AI summary of your KPIs, where attention is needed, and the best next actions.'}
+            </p>
+          </Card>
+
           {/* Recent Activity */}
           <div className="grid lg:grid-cols-2 gap-6">
             <Card className="p-6">
