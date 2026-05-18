@@ -85,6 +85,61 @@ const Dashboard = () => {
     }
   };
 
+  const generateOverview = async () => {
+    if (!stats) return;
+    setAiLoading(true);
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: "user",
+              content: `Give me a concise (4-6 sentence) daily CRM overview based on these KPIs and recent leads. Highlight one win, one risk, and one recommended action. KPIs: ${JSON.stringify(stats)}. Recent leads: ${JSON.stringify(recentLeads.map((l) => ({ name: `${l.first_name} ${l.last_name}`, company: l.company, status: l.status, score: l.score })))}.`,
+            },
+          ],
+        }),
+      });
+      if (!res.ok || !res.body) throw new Error("AI request failed");
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = "";
+      let out = "";
+      setAiSummary("");
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        let nl: number;
+        while ((nl = buf.indexOf("\n")) !== -1) {
+          let line = buf.slice(0, nl);
+          buf = buf.slice(nl + 1);
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (!line.startsWith("data: ")) continue;
+          const json = line.slice(6).trim();
+          if (json === "[DONE]") break;
+          try {
+            const p = JSON.parse(json);
+            const c = p.choices?.[0]?.delta?.content;
+            if (c) { out += c; setAiSummary(out); }
+          } catch {
+            buf = line + "\n" + buf;
+            break;
+          }
+        }
+      }
+    } catch (e: any) {
+      toast({ title: "AI error", description: e.message, variant: "destructive" });
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <DashboardNavbar />
