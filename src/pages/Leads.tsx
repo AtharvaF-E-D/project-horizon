@@ -14,6 +14,7 @@ import { Search, Plus, Mail, Phone, Building, TrendingUp, Users, Target, Flame, 
 import { PermissionGate } from "@/components/common/PermissionGate";
 import { useUserRole } from "@/hooks/useUserRole";
 import { LeadsBulkActions } from "@/components/leads/LeadsBulkActions";
+import { LeadProfileDrawer } from "@/components/leads/LeadProfileDrawer";
 
 const Leads = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const Leads = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sourceFilter, setSourceFilter] = useState<string>("all");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [drawerLeadId, setDrawerLeadId] = useState<string | null>(null);
   const { permissions } = useUserRole();
 
   const { data: leads, isLoading } = useQuery({
@@ -245,7 +247,7 @@ const Leads = () => {
                       </div>
                       <div
                         className="flex items-start justify-between flex-1"
-                        onClick={() => navigate(`/leads/${lead.id}`)}
+                        onClick={() => setDrawerLeadId(lead.id)}
                       >
                         <div className="space-y-2 flex-1">
                           <div className="flex items-center gap-3 flex-wrap">
@@ -321,6 +323,12 @@ const Leads = () => {
           onClearSelection={() => setSelectedIds([])}
         />
       )}
+
+      <LeadProfileDrawer
+        leadId={drawerLeadId}
+        open={!!drawerLeadId}
+        onOpenChange={(o) => !o && setDrawerLeadId(null)}
+      />
     </div>
   );
 };
