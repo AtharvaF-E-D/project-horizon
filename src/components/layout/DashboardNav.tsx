@@ -5,7 +5,7 @@ import {
   BarChart3, Building2, UserCircle, DollarSign, Bot, CheckSquare,
   Megaphone, Activity, Mail, PieChart, Filter, Workflow, Shield,
   FileSpreadsheet, Gauge, UserX, BarChart2, LucideIcon, Receipt,
-  FileText, Share2, ShoppingCart, HelpCircle, Mic,
+  FileText, Share2, ShoppingCart, HelpCircle, Mic, Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -28,6 +28,7 @@ const navItems: NavItem[] = [
   { icon: UserCircle, label: "Contacts", path: "/contacts", permissionKey: "contacts" },
   { icon: Building2, label: "Companies", path: "/companies", permissionKey: "companies" },
   { icon: CheckSquare, label: "Tasks", path: "/tasks", permissionKey: "tasks" },
+  { icon: Calendar, label: "Appointments", path: "/appointments", permissionKey: "tasks" },
   { icon: Megaphone, label: "Campaigns", path: "/campaigns", permissionKey: "campaigns" },
   { icon: PieChart, label: "Email Analytics", path: "/campaign-analytics", permissionKey: "campaignAnalytics" },
   { icon: Filter, label: "Segments", path: "/segments", permissionKey: "segments" },
