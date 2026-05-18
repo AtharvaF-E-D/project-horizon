@@ -53,6 +53,72 @@ export type Database = {
         }
         Relationships: []
       }
+      appointments: {
+        Row: {
+          attendee_email: string | null
+          attendee_name: string | null
+          attendee_phone: string | null
+          contact_id: string | null
+          created_at: string
+          description: string | null
+          end_time: string
+          id: string
+          lead_id: string | null
+          location: string | null
+          meeting_url: string | null
+          reminder_minutes: number | null
+          start_time: string
+          status: string
+          sync_event_id: string | null
+          sync_provider: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attendee_email?: string | null
+          attendee_name?: string | null
+          attendee_phone?: string | null
+          contact_id?: string | null
+          created_at?: string
+          description?: string | null
+          end_time: string
+          id?: string
+          lead_id?: string | null
+          location?: string | null
+          meeting_url?: string | null
+          reminder_minutes?: number | null
+          start_time: string
+          status?: string
+          sync_event_id?: string | null
+          sync_provider?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attendee_email?: string | null
+          attendee_name?: string | null
+          attendee_phone?: string | null
+          contact_id?: string | null
+          created_at?: string
+          description?: string | null
+          end_time?: string
+          id?: string
+          lead_id?: string | null
+          location?: string | null
+          meeting_url?: string | null
+          reminder_minutes?: number | null
+          start_time?: string
+          status?: string
+          sync_event_id?: string | null
+          sync_provider?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { DashboardNav } from "@/components/layout/DashboardNav";
 import { DashboardNavbar } from "@/components/layout/DashboardNavbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,6 +49,14 @@ const AIAssistant = () => {
       scrollRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
+
+  const location = useLocation();
+  useEffect(() => {
+    const incoming = (location.state as any)?.prompt;
+    if (incoming && typeof incoming === "string") {
+      setInput(incoming);
+    }
+  }, [location.state]);
 
   const streamChat = async (userMessages: Message[]) => {
     const response = await fetch(CHAT_URL, {

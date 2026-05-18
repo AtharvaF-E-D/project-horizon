@@ -3,12 +3,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DashboardNav } from "@/components/layout/DashboardNav";
 import { DashboardNavbar } from "@/components/layout/DashboardNavbar";
-import { TrendingUp, Users, Target, DollarSign, Plus, Search, Mail, BarChart3 } from "lucide-react";
+import { TrendingUp, Users, Target, DollarSign, Plus, Search, Mail, BarChart3, Sparkles, Loader2, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 
 interface DashboardStats {
   totalLeads: number;
@@ -29,9 +30,12 @@ interface RecentLead {
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast } = useToast();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentLeads, setRecentLeads] = useState<RecentLead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -81,6 +85,61 @@ const Dashboard = () => {
     }
   };
 
+  const generateOverview = async () => {
+    if (!stats) return;
+    setAiLoading(true);
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: "user",
+              content: `Give me a concise (4-6 sentence) daily CRM overview based on these KPIs and recent leads. Highlight one win, one risk, and one recommended action. KPIs: ${JSON.stringify(stats)}. Recent leads: ${JSON.stringify(recentLeads.map((l) => ({ name: `${l.first_name} ${l.last_name}`, company: l.company, status: l.status, score: l.score })))}.`,
+            },
+          ],
+        }),
+      });
+      if (!res.ok || !res.body) throw new Error("AI request failed");
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = "";
+      let out = "";
+      setAiSummary("");
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        let nl: number;
+        while ((nl = buf.indexOf("\n")) !== -1) {
+          let line = buf.slice(0, nl);
+          buf = buf.slice(nl + 1);
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (!line.startsWith("data: ")) continue;
+          const json = line.slice(6).trim();
+          if (json === "[DONE]") break;
+          try {
+            const p = JSON.parse(json);
+            const c = p.choices?.[0]?.delta?.content;
+            if (c) { out += c; setAiSummary(out); }
+          } catch {
+            buf = line + "\n" + buf;
+            break;
+          }
+        }
+      }
+    } catch (e: any) {
+      toast({ title: "AI error", description: e.message, variant: "destructive" });
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <DashboardNavbar />
@@ -126,6 +185,29 @@ const Dashboard = () => {
             )}
           </div>
 
+          {/* AI Daily Overview */}
+          <Card className="p-6 border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-secondary/5">
+            <div className="flex items-start justify-between gap-4 mb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-primary-foreground" />
+                </div>
+                <div>
+                  <h3 className="font-heading text-lg font-semibold">AI Daily Overview</h3>
+                  <p className="text-xs text-muted-foreground">Snapshot of pipeline health and priorities</p>
+                </div>
+              </div>
+              <Button size="sm" variant="outline" onClick={generateOverview} disabled={aiLoading || !stats}>
+                {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 mr-1" />}
+                {aiSummary ? "Refresh" : "Generate"}
+              </Button>
+            </div>
+            <p className="text-sm whitespace-pre-wrap leading-relaxed">
+              {aiSummary ||
+                'Tap "Generate" to get a real-time AI summary of your KPIs, where attention is needed, and the best next actions.'}
+            </p>
+          </Card>
+
           {/* Recent Activity */}
           <div className="grid lg:grid-cols-2 gap-6">
             <Card className="p-6">
@@ -162,7 +244,9 @@ const Dashboard = () => {
                 {[
                   { label: "Add Lead", icon: Users, path: "/leads/new" },
                   { label: "Create Task", icon: Target, path: "/tasks" },
+                  { label: "Schedule", icon: Calendar, path: "/appointments" },
                   { label: "Send Email", icon: Mail, path: "/email-templates" },
+                  { label: "AI Assistant", icon: Sparkles, path: "/ai-assistant" },
                   { label: "View Reports", icon: BarChart3, path: "/reports" },
                 ].map((action, index) => (
                   <Button
