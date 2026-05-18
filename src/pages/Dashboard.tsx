@@ -3,12 +3,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DashboardNav } from "@/components/layout/DashboardNav";
 import { DashboardNavbar } from "@/components/layout/DashboardNavbar";
-import { TrendingUp, Users, Target, DollarSign, Plus, Search, Mail, BarChart3 } from "lucide-react";
+import { TrendingUp, Users, Target, DollarSign, Plus, Search, Mail, BarChart3, Sparkles, Loader2, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 
 interface DashboardStats {
   totalLeads: number;
@@ -29,9 +30,12 @@ interface RecentLead {
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast } = useToast();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentLeads, setRecentLeads] = useState<RecentLead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
     if (!user) return;
