@@ -53,6 +53,8 @@ import EcommerceInsights from "./pages/EcommerceInsights";
 import HelpSupport from "./pages/HelpSupport";
 import VoiceNotes from "./pages/VoiceNotes";
 import NotFound from "./pages/NotFound";
+import Appointments from "./pages/Appointments";
+import { FloatingAIButton } from "@/components/ai/FloatingAIButton";
 
 const queryClient = new QueryClient();
 
@@ -118,10 +120,12 @@ const App = () => (
           <Route path="/ecommerce" element={<ProtectedRoute permission="ecommerce"><EcommerceInsights /></ProtectedRoute>} />
           <Route path="/help" element={<ProtectedRoute permission="helpSupport"><HelpSupport /></ProtectedRoute>} />
           <Route path="/voice-notes" element={<ProtectedRoute permission="voiceNotes"><VoiceNotes /></ProtectedRoute>} />
+          <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
 
           {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <FloatingAIButton />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
