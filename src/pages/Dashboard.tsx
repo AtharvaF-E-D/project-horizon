@@ -244,7 +244,9 @@ const Dashboard = () => {
                 {[
                   { label: "Add Lead", icon: Users, path: "/leads/new" },
                   { label: "Create Task", icon: Target, path: "/tasks" },
+                  { label: "Schedule", icon: Calendar, path: "/appointments" },
                   { label: "Send Email", icon: Mail, path: "/email-templates" },
+                  { label: "AI Assistant", icon: Sparkles, path: "/ai-assistant" },
                   { label: "View Reports", icon: BarChart3, path: "/reports" },
                 ].map((action, index) => (
                   <Button
