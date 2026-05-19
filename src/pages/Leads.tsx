@@ -215,6 +215,17 @@ const Leads = () => {
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
+                <Select value={aiFilter} onValueChange={setAiFilter}>
+                  <SelectTrigger className="w-full md:w-[160px]">
+                    <SelectValue placeholder="AI Score" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Scores</SelectItem>
+                    <SelectItem value="Hot">🔥 Hot</SelectItem>
+                    <SelectItem value="Warm">😊 Warm</SelectItem>
+                    <SelectItem value="Cold">❄️ Cold</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>
