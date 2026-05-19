@@ -35,7 +35,7 @@ const Leads = () => {
   }, [params]);
 
   const { data: leads, isLoading } = useQuery({
-    queryKey: ["leads", statusFilter, sourceFilter],
+    queryKey: ["leads", statusFilter, sourceFilter, aiFilter],
     queryFn: async () => {
       let query = supabase
         .from("leads")
@@ -47,6 +47,9 @@ const Leads = () => {
       }
       if (sourceFilter !== "all") {
         query = query.eq("source", sourceFilter as any);
+      }
+      if (aiFilter !== "all") {
+        query = query.eq("ai_score_label", aiFilter);
       }
 
       const { data, error } = await query;
