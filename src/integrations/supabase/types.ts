@@ -66,6 +66,9 @@ export type Database = {
           lead_id: string | null
           location: string | null
           meeting_url: string | null
+          recurrence_parent_id: string | null
+          recurrence_rule: string
+          recurrence_until: string | null
           reminder_minutes: number | null
           start_time: string
           status: string
@@ -87,6 +90,9 @@ export type Database = {
           lead_id?: string | null
           location?: string | null
           meeting_url?: string | null
+          recurrence_parent_id?: string | null
+          recurrence_rule?: string
+          recurrence_until?: string | null
           reminder_minutes?: number | null
           start_time: string
           status?: string
@@ -108,6 +114,9 @@ export type Database = {
           lead_id?: string | null
           location?: string | null
           meeting_url?: string | null
+          recurrence_parent_id?: string | null
+          recurrence_rule?: string
+          recurrence_until?: string | null
           reminder_minutes?: number | null
           start_time?: string
           status?: string
@@ -539,6 +548,42 @@ export type Database = {
           name?: string
           subject?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      lead_files: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_url: string | null
+          id: string
+          lead_id: string
+          mime_type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          lead_id: string
+          mime_type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          lead_id?: string
+          mime_type?: string | null
           user_id?: string
         }
         Relationships: []
