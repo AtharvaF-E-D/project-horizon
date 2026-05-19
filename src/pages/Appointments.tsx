@@ -9,14 +9,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar as CalendarIcon, Plus, ChevronLeft, ChevronRight, Video, MapPin, Mail, RefreshCw, Link2 } from "lucide-react";
+import {
+  Calendar as CalendarIcon, Plus, ChevronLeft, ChevronRight, Video, MapPin,
+  RefreshCw, Link2, Download, Repeat,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useActivityLogger } from "@/hooks/useActivityLogger";
 import {
   addDays, addMonths, endOfMonth, endOfWeek, format, isSameDay, isSameMonth,
   startOfMonth, startOfWeek, subMonths,
 } from "date-fns";
+import {
+  expandRecurrence, downloadICS, googleCalendarUrl, outlookCalendarUrl,
+  type Recurrence,
+} from "@/lib/calendar";
+import { useSearchParams } from "react-router-dom";
 
 type Appt = {
   id: string;
@@ -30,25 +39,37 @@ type Appt = {
   attendee_name: string | null;
   attendee_email: string | null;
   sync_provider: string;
+  lead_id: string | null;
+  recurrence_rule: string;
+  recurrence_until: string | null;
+  recurrence_parent_id: string | null;
 };
+
+type Lead = { id: string; first_name: string; last_name: string };
 
 const blankForm = (start: Date) => ({
   title: "",
   description: "",
   start_time: format(start, "yyyy-MM-dd'T'HH:mm"),
-  end_time: format(addDays(start, 0).setHours(start.getHours() + 1, 0, 0, 0) as any, "yyyy-MM-dd'T'HH:mm"),
+  end_time: format(new Date(start.getTime() + 60 * 60 * 1000), "yyyy-MM-dd'T'HH:mm"),
   location: "",
   meeting_url: "",
   attendee_name: "",
   attendee_email: "",
   sync_provider: "none",
+  lead_id: "none",
+  recurrence_rule: "none" as Recurrence,
+  recurrence_until: "",
 });
 
 const Appointments = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { logActivity } = useActivityLogger();
+  const [params] = useSearchParams();
   const [cursor, setCursor] = useState(new Date());
   const [appointments, setAppointments] = useState<Appt[]>([]);
+  const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Appt | null>(null);
@@ -59,21 +80,39 @@ const Appointments = () => {
     setLoading(true);
     const start = startOfWeek(startOfMonth(cursor));
     const end = endOfWeek(endOfMonth(cursor));
-    const { data, error } = await supabase
-      .from("appointments")
-      .select("*")
-      .eq("user_id", user.id)
-      .gte("start_time", start.toISOString())
-      .lte("start_time", end.toISOString())
-      .order("start_time");
-    if (error) toast({ title: "Failed to load", description: error.message, variant: "destructive" });
-    setAppointments((data as Appt[]) || []);
+    const [aRes, lRes] = await Promise.all([
+      supabase
+        .from("appointments")
+        .select("*")
+        .eq("user_id", user.id)
+        .gte("start_time", start.toISOString())
+        .lte("start_time", end.toISOString())
+        .order("start_time"),
+      supabase.from("leads").select("id, first_name, last_name").eq("user_id", user.id).order("created_at", { ascending: false }).limit(200),
+    ]);
+    if (aRes.error) toast({ title: "Failed to load", description: aRes.error.message, variant: "destructive" });
+    setAppointments((aRes.data as Appt[]) || []);
+    setLeads((lRes.data as Lead[]) || []);
     setLoading(false);
   };
 
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, cursor]);
+
+  // Auto-open new dialog for ?new=1 and preselect lead via ?lead=
+  useEffect(() => {
+    if (params.get("new") === "1") {
+      const lead = params.get("lead");
+      const d = new Date();
+      d.setHours(d.getHours() + 1, 0, 0, 0);
+      setEditing(null);
+      setForm({ ...blankForm(d), lead_id: lead || "none" });
+      setDialogOpen(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const days = useMemo(() => {
     const start = startOfWeek(startOfMonth(cursor));
@@ -126,8 +165,23 @@ const Appointments = () => {
       attendee_name: a.attendee_name ?? "",
       attendee_email: a.attendee_email ?? "",
       sync_provider: a.sync_provider ?? "none",
+      lead_id: a.lead_id ?? "none",
+      recurrence_rule: (a.recurrence_rule as Recurrence) ?? "none",
+      recurrence_until: a.recurrence_until ? format(new Date(a.recurrence_until), "yyyy-MM-dd") : "",
     });
     setDialogOpen(true);
+  };
+
+  const logAppointmentActivity = async (a: { id: string; title: string; start_time: string; lead_id: string | null }, op: "created" | "updated") => {
+    await logActivity({
+      activityType: "meeting_scheduled",
+      title: `Appointment ${op}: ${a.title}`,
+      description: `${format(new Date(a.start_time), "EEE, MMM d 'at' h:mm a")}`,
+      entityType: a.lead_id ? "lead" : "appointment",
+      entityId: a.lead_id || a.id,
+      entityName: a.title,
+      metadata: { appointment_id: a.id, operation: op },
+    });
   };
 
   const save = async () => {
@@ -135,33 +189,85 @@ const Appointments = () => {
       toast({ title: "Title, start and end are required", variant: "destructive" });
       return;
     }
-    const payload = {
+    const startD = new Date(form.start_time);
+    const endD = new Date(form.end_time);
+    const leadId = form.lead_id === "none" ? null : form.lead_id;
+    const basePayload = {
       user_id: user.id,
       title: form.title,
       description: form.description || null,
-      start_time: new Date(form.start_time).toISOString(),
-      end_time: new Date(form.end_time).toISOString(),
       location: form.location || null,
       meeting_url: form.meeting_url || null,
       attendee_name: form.attendee_name || null,
       attendee_email: form.attendee_email || null,
       sync_provider: form.sync_provider,
+      lead_id: leadId,
+      recurrence_rule: form.recurrence_rule,
+      recurrence_until: form.recurrence_until ? new Date(form.recurrence_until).toISOString() : null,
     };
-    const op = editing
-      ? supabase.from("appointments").update(payload).eq("id", editing.id)
-      : supabase.from("appointments").insert(payload);
-    const { error } = await op;
-    if (error) {
-      toast({ title: "Save failed", description: error.message, variant: "destructive" });
-      return;
+
+    if (editing) {
+      const { data, error } = await supabase
+        .from("appointments")
+        .update({
+          ...basePayload,
+          start_time: startD.toISOString(),
+          end_time: endD.toISOString(),
+        })
+        .eq("id", editing.id)
+        .select()
+        .single();
+      if (error) {
+        toast({ title: "Save failed", description: error.message, variant: "destructive" });
+        return;
+      }
+      if (data) await logAppointmentActivity(data as any, "updated");
+      toast({ title: "Appointment updated" });
+    } else {
+      // Materialize recurrence
+      const occurrences = expandRecurrence(
+        startD,
+        endD,
+        form.recurrence_rule,
+        form.recurrence_until ? new Date(form.recurrence_until) : null
+      );
+      const first = occurrences[0];
+      const { data: firstRow, error } = await supabase
+        .from("appointments")
+        .insert({
+          ...basePayload,
+          start_time: first.start.toISOString(),
+          end_time: first.end.toISOString(),
+        })
+        .select()
+        .single();
+      if (error || !firstRow) {
+        toast({ title: "Save failed", description: error?.message, variant: "destructive" });
+        return;
+      }
+      if (occurrences.length > 1) {
+        const rest = occurrences.slice(1).map((o) => ({
+          ...basePayload,
+          start_time: o.start.toISOString(),
+          end_time: o.end.toISOString(),
+          recurrence_parent_id: firstRow.id,
+        }));
+        await supabase.from("appointments").insert(rest);
+      }
+      await logAppointmentActivity(firstRow as any, "created");
+      toast({
+        title: "Appointment created",
+        description: occurrences.length > 1 ? `${occurrences.length} occurrences scheduled` : undefined,
+      });
     }
-    toast({ title: editing ? "Appointment updated" : "Appointment created" });
     setDialogOpen(false);
     load();
   };
 
   const remove = async () => {
     if (!editing) return;
+    // Also delete child occurrences if this is a series parent
+    await supabase.from("appointments").delete().eq("recurrence_parent_id", editing.id);
     const { error } = await supabase.from("appointments").delete().eq("id", editing.id);
     if (error) {
       toast({ title: "Delete failed", description: error.message, variant: "destructive" });
@@ -172,11 +278,24 @@ const Appointments = () => {
     load();
   };
 
+  const apptToICS = (a: Appt) => ({
+    id: a.id,
+    title: a.title,
+    description: a.description,
+    location: a.location,
+    meeting_url: a.meeting_url,
+    start: new Date(a.start_time),
+    end: new Date(a.end_time),
+    attendee_email: a.attendee_email,
+    recurrence_rule: a.recurrence_rule as Recurrence,
+    recurrence_until: a.recurrence_until ? new Date(a.recurrence_until) : null,
+  });
+
   const connectProvider = (provider: "google" | "outlook") => {
     toast({
-      title: `${provider === "google" ? "Google Calendar" : "Outlook"} sync`,
+      title: `${provider === "google" ? "Google Calendar" : "Outlook"} two-way sync`,
       description:
-        "Two-way sync requires connecting your account. Reach out to enable this integration — your appointments are stored and ready to push.",
+        "Two-way sync is coming soon. For now, use 'Add to Google/Outlook' on any appointment or download the .ics file.",
     });
   };
 
@@ -209,7 +328,6 @@ const Appointments = () => {
           </div>
 
           <div className="grid lg:grid-cols-3 gap-6">
-            {/* Calendar */}
             <Card className="lg:col-span-2 p-4">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-semibold text-lg">{format(cursor, "MMMM yyyy")}</h2>
@@ -217,9 +335,7 @@ const Appointments = () => {
                   <Button variant="outline" size="icon" onClick={() => setCursor(subMonths(cursor, 1))}>
                     <ChevronLeft className="w-4 h-4" />
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => setCursor(new Date())}>
-                    Today
-                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setCursor(new Date())}>Today</Button>
                   <Button variant="outline" size="icon" onClick={() => setCursor(addMonths(cursor, 1))}>
                     <ChevronRight className="w-4 h-4" />
                   </Button>
@@ -256,9 +372,12 @@ const Appointments = () => {
                               e.stopPropagation();
                               openEdit(a);
                             }}
-                            className="text-[10px] leading-tight px-1 py-0.5 rounded bg-primary/15 text-primary truncate cursor-pointer hover:bg-primary/25"
+                            className="text-[10px] leading-tight px-1 py-0.5 rounded bg-primary/15 text-primary truncate cursor-pointer hover:bg-primary/25 flex items-center gap-1"
                           >
-                            {format(new Date(a.start_time), "HH:mm")} {a.title}
+                            {(a.recurrence_rule !== "none" || a.recurrence_parent_id) && (
+                              <Repeat className="w-2.5 h-2.5 flex-shrink-0" />
+                            )}
+                            <span className="truncate">{format(new Date(a.start_time), "HH:mm")} {a.title}</span>
                           </div>
                         ))}
                         {dayAppts.length > 2 && (
@@ -271,7 +390,6 @@ const Appointments = () => {
               </div>
             </Card>
 
-            {/* Upcoming */}
             <Card className="p-4">
               <h3 className="font-semibold text-lg mb-3">Upcoming</h3>
               <div className="space-y-3">
@@ -285,7 +403,12 @@ const Appointments = () => {
                       className="p-3 rounded-lg border hover:bg-muted/50 cursor-pointer"
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <div className="font-medium text-sm">{a.title}</div>
+                        <div className="font-medium text-sm flex items-center gap-1">
+                          {(a.recurrence_rule !== "none" || a.recurrence_parent_id) && (
+                            <Repeat className="w-3 h-3 text-primary" />
+                          )}
+                          {a.title}
+                        </div>
                         {a.sync_provider !== "none" && (
                           <Badge variant="outline" className="text-[10px]">{a.sync_provider}</Badge>
                         )}
@@ -312,9 +435,8 @@ const Appointments = () => {
         </div>
       </main>
 
-      {/* Form Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing ? "Edit appointment" : "New appointment"}</DialogTitle>
           </DialogHeader>
@@ -333,6 +455,47 @@ const Appointments = () => {
                 <Input type="datetime-local" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} />
               </div>
             </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Repeats</Label>
+                <Select
+                  value={form.recurrence_rule}
+                  onValueChange={(v) => setForm({ ...form, recurrence_rule: v as Recurrence })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Does not repeat</SelectItem>
+                    <SelectItem value="daily">Daily</SelectItem>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Repeat until</Label>
+                <Input
+                  type="date"
+                  value={form.recurrence_until}
+                  onChange={(e) => setForm({ ...form, recurrence_until: e.target.value })}
+                  disabled={form.recurrence_rule === "none"}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label>Related lead</Label>
+              <Select value={form.lead_id} onValueChange={(v) => setForm({ ...form, lead_id: v })}>
+                <SelectTrigger><SelectValue placeholder="No lead linked" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No lead linked</SelectItem>
+                  {leads.map((l) => (
+                    <SelectItem key={l.id} value={l.id}>{l.first_name} {l.last_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Attendee name</Label>
@@ -354,20 +517,26 @@ const Appointments = () => {
               </div>
             </div>
             <div>
-              <Label>Sync</Label>
-              <Select value={form.sync_provider} onValueChange={(v) => setForm({ ...form, sync_provider: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No sync</SelectItem>
-                  <SelectItem value="google">Google Calendar (queued)</SelectItem>
-                  <SelectItem value="outlook">Outlook (queued)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
               <Label>Notes</Label>
               <Textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             </div>
+
+            {editing && (
+              <div className="pt-2 border-t">
+                <Label className="text-xs uppercase text-muted-foreground">Add to calendar</Label>
+                <div className="flex gap-2 mt-2 flex-wrap">
+                  <Button size="sm" variant="outline" onClick={() => downloadICS(apptToICS(editing))}>
+                    <Download className="w-3 h-3 mr-1" /> .ics
+                  </Button>
+                  <Button size="sm" variant="outline" asChild>
+                    <a href={googleCalendarUrl(apptToICS(editing))} target="_blank" rel="noreferrer">Google</a>
+                  </Button>
+                  <Button size="sm" variant="outline" asChild>
+                    <a href={outlookCalendarUrl(apptToICS(editing))} target="_blank" rel="noreferrer">Outlook</a>
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
           <DialogFooter className="gap-2">
             {editing && (
