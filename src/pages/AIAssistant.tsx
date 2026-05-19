@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { DashboardNav } from "@/components/layout/DashboardNav";
 import { DashboardNavbar } from "@/components/layout/DashboardNavbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -51,12 +51,23 @@ const AIAssistant = () => {
   }, [messages]);
 
   const location = useLocation();
+  const [sp] = useSearchParams();
   useEffect(() => {
     const incoming = (location.state as any)?.prompt;
     if (incoming && typeof incoming === "string") {
       setInput(incoming);
+      return;
     }
-  }, [location.state]);
+    const presets: Record<string, string> = {
+      plan_my_day: "Plan my day: prioritize my tasks, hot leads, and meetings for today.",
+      analyze_pipeline: "Analyze my sales pipeline performance and surface risks.",
+      follow_up: "Generate a follow-up plan for my warm leads this week.",
+    };
+    const queryPrompt = sp.get("prompt");
+    if (queryPrompt) {
+      setInput(presets[queryPrompt] || queryPrompt);
+    }
+  }, [location.state, sp]);
 
   const streamChat = async (userMessages: Message[]) => {
     const response = await fetch(CHAT_URL, {

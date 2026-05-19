@@ -5,7 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Mail, Phone, Building, ExternalLink, Sparkles, Loader2, FileText, Clock } from "lucide-react";
+import { Mail, Phone, Building, ExternalLink, Sparkles, Loader2, Clock } from "lucide-react";
+import { LeadFiles } from "./LeadFiles";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -188,13 +189,7 @@ export const LeadProfileDrawer = ({ leadId, open, onOpenChange }: Props) => {
               </TabsContent>
 
               <TabsContent value="files" className="mt-4">
-                <div className="text-center py-10 border-2 border-dashed rounded-lg">
-                  <FileText className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">No files attached</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Upload from the full lead view
-                  </p>
-                </div>
+                <LeadFiles leadId={lead.id} userId={lead.user_id} />
               </TabsContent>
             </Tabs>
           </>
