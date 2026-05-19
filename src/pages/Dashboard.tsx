@@ -243,11 +243,11 @@ const Dashboard = () => {
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { label: "Add Lead", icon: Users, path: "/leads/new" },
-                  { label: "Create Task", icon: Target, path: "/tasks" },
-                  { label: "Schedule", icon: Calendar, path: "/appointments" },
-                  { label: "Send Email", icon: Mail, path: "/email-templates" },
-                  { label: "AI Assistant", icon: Sparkles, path: "/ai-assistant" },
-                  { label: "View Reports", icon: BarChart3, path: "/reports" },
+                  { label: "Hot Leads", icon: TrendingUp, path: "/leads?ai=Hot" },
+                  { label: "Schedule", icon: Calendar, path: "/appointments?new=1" },
+                  { label: "My Tasks", icon: Target, path: "/tasks?status=todo" },
+                  { label: "Send Email", icon: Mail, path: "/campaigns?new=1" },
+                  { label: "AI Assistant", icon: Sparkles, path: "/ai-assistant?prompt=plan_my_day" },
                 ].map((action, index) => (
                   <Button
                     key={index}
