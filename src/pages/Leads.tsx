@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,12 +18,21 @@ import { LeadProfileDrawer } from "@/components/leads/LeadProfileDrawer";
 
 const Leads = () => {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>(params.get("status") || "all");
+  const [sourceFilter, setSourceFilter] = useState<string>(params.get("source") || "all");
+  const [aiFilter, setAiFilter] = useState<string>(params.get("ai") || "all");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [drawerLeadId, setDrawerLeadId] = useState<string | null>(null);
   const { permissions } = useUserRole();
+
+  // Sync if URL params change
+  useEffect(() => {
+    setStatusFilter(params.get("status") || "all");
+    setSourceFilter(params.get("source") || "all");
+    setAiFilter(params.get("ai") || "all");
+  }, [params]);
 
   const { data: leads, isLoading } = useQuery({
     queryKey: ["leads", statusFilter, sourceFilter],
