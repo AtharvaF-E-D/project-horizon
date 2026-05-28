@@ -571,6 +571,12 @@ const Team = () => {
                                   <Edit className="h-4 w-4 mr-2" />
                                   Edit Member
                                 </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleSendPasswordReset(member)}
+                                >
+                                  <KeyRound className="h-4 w-4 mr-2" />
+                                  Send Password Reset
+                                </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   onClick={() => handleToggleActive(member)}
