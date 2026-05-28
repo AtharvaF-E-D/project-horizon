@@ -55,6 +55,7 @@ import {
   UserCheck,
   Trash2,
   Send,
+  KeyRound,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -302,6 +303,19 @@ const Team = () => {
       toast.error("Failed to update member status");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleSendPasswordReset = async (member: TeamMember) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(member.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success(`Password reset email sent to ${member.email}`);
+    } catch (error: any) {
+      console.error("Error sending reset email:", error);
+      toast.error(error.message || "Failed to send password reset email");
     }
   };
 
@@ -556,6 +570,12 @@ const Team = () => {
                                 >
                                   <Edit className="h-4 w-4 mr-2" />
                                   Edit Member
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleSendPasswordReset(member)}
+                                >
+                                  <KeyRound className="h-4 w-4 mr-2" />
+                                  Send Password Reset
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
