@@ -3,44 +3,46 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { RolePermissions } from "@/config/permissions";
+import type { Database } from "@/integrations/supabase/types";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+type AppRole = Database["public"]["Enums"]["app_role"];
 
 interface ProtectedRouteProps {
   children: ReactNode;
   permission?: keyof RolePermissions;
+  /** Restrict to one or more specific roles (e.g. ["owner"]). Owner-only routes use this. */
+  requireRole?: AppRole | AppRole[];
   redirectTo?: string;
 }
 
-/**
- * Component that protects routes based on authentication and permissions.
- * Wrap page components with this to enforce access control.
- * 
- * @example
- * <ProtectedRoute permission="roles">
- *   <RoleManagement />
- * </ProtectedRoute>
- */
-export const ProtectedRoute = ({ 
-  children, 
-  permission, 
-  redirectTo = "/dashboard" 
+export const ProtectedRoute = ({
+  children,
+  permission,
+  requireRole,
+  redirectTo = "/dashboard",
 }: ProtectedRouteProps) => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { permissions, loading: roleLoading } = useUserRole();
+  const { permissions, role, loading: roleLoading } = useUserRole();
   const { toast } = useToast();
 
   const loading = authLoading || roleLoading;
+  const allowedRoles = requireRole
+    ? Array.isArray(requireRole)
+      ? requireRole
+      : [requireRole]
+    : null;
+  const roleOk = !allowedRoles || (role && allowedRoles.includes(role));
+  const permOk = !permission || permissions[permission];
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/auth");
-    }
+    if (!authLoading && !user) navigate("/auth");
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
-    if (!loading && user && permission && !permissions[permission]) {
+    if (!loading && user && (!permOk || !roleOk)) {
       toast({
         title: "Access Denied",
         description: "You don't have permission to access this page.",
@@ -48,7 +50,7 @@ export const ProtectedRoute = ({
       });
       navigate(redirectTo);
     }
-  }, [loading, user, permission, permissions, navigate, redirectTo, toast]);
+  }, [loading, user, permOk, roleOk, navigate, redirectTo, toast]);
 
   if (loading) {
     return (
@@ -58,13 +60,6 @@ export const ProtectedRoute = ({
     );
   }
 
-  if (!user) {
-    return null;
-  }
-
-  if (permission && !permissions[permission]) {
-    return null;
-  }
-
+  if (!user || !permOk || !roleOk) return null;
   return <>{children}</>;
 };
