@@ -103,17 +103,18 @@ const App = () => (
           <Route path="/whatsapp" element={<ProtectedRoute permission="whatsapp"><WhatsApp /></ProtectedRoute>} />
           <Route path="/calls" element={<ProtectedRoute permission="calls"><Calls /></ProtectedRoute>} />
           <Route path="/reports" element={<ProtectedRoute permission="reports"><Reports /></ProtectedRoute>} />
-          <Route path="/settings" element={<ProtectedRoute permission="settings"><Settings /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute permission="settings" requireRole="owner"><Settings /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/team" element={<ProtectedRoute permission="team"><Team /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
           <Route path="/activity" element={<ProtectedRoute><ActivityTimeline /></ProtectedRoute>} />
-          <Route path="/audit-logs" element={<ProtectedRoute permission="auditLogs"><AuditLogs /></ProtectedRoute>} />
+          <Route path="/audit-logs" element={<ProtectedRoute permission="auditLogs" requireRole="owner"><AuditLogs /></ProtectedRoute>} />
           <Route path="/data-import-export" element={<ProtectedRoute permission="dataImportExport"><DataImportExport /></ProtectedRoute>} />
-          <Route path="/roles" element={<ProtectedRoute permission="roles"><RoleManagement /></ProtectedRoute>} />
-          <Route path="/rate-limits" element={<ProtectedRoute permission="rateLimits"><RateLimitDashboard /></ProtectedRoute>} />
-          <Route path="/suspended-users" element={<ProtectedRoute permission="suspendedUsers"><SuspendedUsers /></ProtectedRoute>} />
-          <Route path="/suspension-stats" element={<ProtectedRoute permission="suspendedUsers"><SuspensionStats /></ProtectedRoute>} />
+          <Route path="/roles" element={<ProtectedRoute permission="roles" requireRole="owner"><RoleManagement /></ProtectedRoute>} />
+          <Route path="/rate-limits" element={<ProtectedRoute permission="rateLimits" requireRole="owner"><RateLimitDashboard /></ProtectedRoute>} />
+          <Route path="/suspended-users" element={<ProtectedRoute permission="suspendedUsers" requireRole="owner"><SuspendedUsers /></ProtectedRoute>} />
+          <Route path="/suspension-stats" element={<ProtectedRoute permission="suspendedUsers" requireRole="owner"><SuspensionStats /></ProtectedRoute>} />
+
           <Route path="/invoices" element={<ProtectedRoute permission="invoices"><Invoices /></ProtectedRoute>} />
           <Route path="/proposals" element={<ProtectedRoute permission="proposals"><Proposals /></ProtectedRoute>} />
           <Route path="/social-media" element={<ProtectedRoute permission="socialMedia"><SocialMedia /></ProtectedRoute>} />
