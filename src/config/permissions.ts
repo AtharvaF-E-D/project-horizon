@@ -98,6 +98,13 @@ const OWNER_PERMISSIONS: RolePermissions = {
 
 const ADMIN_PERMISSIONS: RolePermissions = {
   ...OWNER_PERMISSIONS,
+  // Owner-only: super-admin surfaces are not exposed to Admin role
+  roles: false,
+  auditLogs: false,
+  rateLimits: false,
+  suspendedUsers: false,
+  settings: false,
+  canManageRoles: false,
 };
 
 const MANAGER_PERMISSIONS: RolePermissions = {
