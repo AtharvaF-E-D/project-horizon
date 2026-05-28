@@ -306,6 +306,19 @@ const Team = () => {
     }
   };
 
+  const handleSendPasswordReset = async (member: TeamMember) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(member.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success(`Password reset email sent to ${member.email}`);
+    } catch (error: any) {
+      console.error("Error sending reset email:", error);
+      toast.error(error.message || "Failed to send password reset email");
+    }
+  };
+
   const handleCancelInvite = async (inviteId: string) => {
     try {
       const { error } = await supabase
