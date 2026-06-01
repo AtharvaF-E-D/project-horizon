@@ -5,7 +5,7 @@ import {
   BarChart3, Building2, UserCircle, DollarSign, Bot, CheckSquare,
   Megaphone, Activity, Mail, PieChart, Filter, Workflow, Shield,
   FileSpreadsheet, Gauge, UserX, BarChart2, LucideIcon, Receipt,
-  FileText, Share2, ShoppingCart, HelpCircle, Mic, Calendar,
+  FileText, Share2, ShoppingCart, HelpCircle, Mic, Calendar, KeyRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserRole } from "@/hooks/useUserRole";

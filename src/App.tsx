@@ -105,6 +105,7 @@ const App = () => (
           <Route path="/calls" element={<ProtectedRoute permission="calls"><Calls /></ProtectedRoute>} />
           <Route path="/reports" element={<ProtectedRoute permission="reports"><Reports /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute permission="settings" requireRole="owner"><Settings /></ProtectedRoute>} />
+          <Route path="/seed-status" element={<ProtectedRoute permission="settings" requireRole="owner"><SeedStatus /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/team" element={<ProtectedRoute permission="team"><Team /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
