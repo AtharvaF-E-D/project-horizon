@@ -17,37 +17,39 @@ interface SeedStatusData {
   created: boolean;
 }
 
-interface SeedStatusError {
-  error: string;
-}
-
-type SeedResult = SeedStatusData | SeedStatusError;
-
 const SeedStatus = () => {
   const { toast } = useToast();
-  const [result, setResult] = useState<SeedResult | null>(null);
+  const [data, setData] = useState<SeedStatusData | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
 
   const checkStatus = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
-      const { data, error } = await supabase.functions.invoke<SeedResult>("seed-owner", {
+      const { data: respData, error: respError } = await supabase.functions.invoke<SeedStatusData>("seed-owner", {
         body: {},
       });
 
-      if (error) {
+      if (respError) {
         try {
-          const errJson = JSON.parse(error.message) as SeedStatusError;
-          setResult(errJson);
+          const errJson = JSON.parse(respError.message) as { error: string };
+          setError(errJson.error || respError.message);
         } catch {
-          setResult({ error: error.message || "Unknown error" });
+          setError(respError.message || "Unknown error");
         }
-      } else if (data) {
-        setResult(data);
+        setData(null);
+      } else if (respData && respData.ok) {
+        setData(respData);
+        setError(null);
+      } else {
+        setError("Unexpected response from seed function");
+        setData(null);
       }
     } catch (e) {
-      setResult({ error: (e as Error).message });
+      setError((e as Error).message);
+      setData(null);
     } finally {
       setLoading(false);
     }
@@ -55,40 +57,41 @@ const SeedStatus = () => {
 
   const runSeed = async () => {
     setRunning(true);
+    setError(null);
     try {
-      const { data, error } = await supabase.functions.invoke<SeedResult>("seed-owner", {
+      const { data: respData, error: respError } = await supabase.functions.invoke<SeedStatusData>("seed-owner", {
         body: {},
       });
 
-      if (error) {
+      if (respError) {
         try {
-          const errJson = JSON.parse(error.message) as SeedStatusError;
-          setResult(errJson);
-          toast({
-            title: "Seed failed",
-            description: errJson.error,
-            variant: "destructive",
-          });
+          const errJson = JSON.parse(respError.message) as { error: string };
+          const msg = errJson.error || respError.message;
+          setError(msg);
+          setData(null);
+          toast({ title: "Seed failed", description: msg, variant: "destructive" });
         } catch {
-          setResult({ error: error.message || "Unknown error" });
-          toast({
-            title: "Seed failed",
-            description: error.message,
-            variant: "destructive",
-          });
+          setError(respError.message);
+          setData(null);
+          toast({ title: "Seed failed", description: respError.message, variant: "destructive" });
         }
-      } else if (data) {
-        setResult(data);
+      } else if (respData && respData.ok) {
+        setData(respData);
+        setError(null);
         toast({
-          title: data.ok ? "Seed successful" : "Seed returned unexpectedly",
-          description: data.ok
-            ? `Owner account ${data.created ? "created" : "re-synced"} for ${data.email}`
-            : "Unexpected response from seed function",
+          title: "Seed successful",
+          description: `Owner account ${respData.created ? "created" : "re-synced"} for ${respData.email}`,
         });
+      } else {
+        const msg = "Unexpected response from seed function";
+        setError(msg);
+        setData(null);
+        toast({ title: "Seed failed", description: msg, variant: "destructive" });
       }
     } catch (e) {
       const msg = (e as Error).message;
-      setResult({ error: msg });
+      setError(msg);
+      setData(null);
       toast({ title: "Seed failed", description: msg, variant: "destructive" });
     } finally {
       setRunning(false);
@@ -99,8 +102,7 @@ const SeedStatus = () => {
     checkStatus();
   }, [checkStatus]);
 
-  const isProvisioned = result && "ok" in result && result.ok;
-  const isError = result && "error" in result;
+  const isProvisioned = !!data;
 
   return (
     <div className="min-h-screen bg-background">
@@ -128,13 +130,11 @@ const SeedStatus = () => {
             </Card>
           ) : (
             <>
-              {isError && (
+              {error && (
                 <Alert variant="destructive" className="mb-6">
                   <AlertTriangle className="h-4 w-4" />
                   <AlertTitle>Error</AlertTitle>
-                  <AlertDescription>
-                    {"error" in result ? result.error : "An unknown error occurred"}
-                  </AlertDescription>
+                  <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
 
@@ -165,25 +165,25 @@ const SeedStatus = () => {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                         <div>
                           <p className="text-muted-foreground">Email</p>
-                          <p className="font-medium">{(result as SeedStatusData).email}</p>
+                          <p className="font-medium">{data.email}</p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">User ID</p>
                           <p className="font-medium font-mono text-xs break-all">
-                            {(result as SeedStatusData).user_id}
+                            {data.user_id}
                           </p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Created on first run</p>
                           <p className="font-medium">
-                            {(result as SeedStatusData).created ? "Yes" : "No (existed before)"}
+                            {data.created ? "Yes" : "No (existed before)"}
                           </p>
                         </div>
                       </div>
                     </div>
                   )}
 
-                  {!isProvisioned && !isError && (
+                  {!isProvisioned && !error && (
                     <Alert>
                       <AlertTriangle className="h-4 w-4" />
                       <AlertTitle>No Owner account found</AlertTitle>
