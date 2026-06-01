@@ -54,6 +54,7 @@ import HelpSupport from "./pages/HelpSupport";
 import VoiceNotes from "./pages/VoiceNotes";
 import NotFound from "./pages/NotFound";
 import Appointments from "./pages/Appointments";
+import SeedStatus from "./pages/SeedStatus";
 import { FloatingAIButton } from "@/components/ai/FloatingAIButton";
 
 const queryClient = new QueryClient();
@@ -104,6 +105,7 @@ const App = () => (
           <Route path="/calls" element={<ProtectedRoute permission="calls"><Calls /></ProtectedRoute>} />
           <Route path="/reports" element={<ProtectedRoute permission="reports"><Reports /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute permission="settings" requireRole="owner"><Settings /></ProtectedRoute>} />
+          <Route path="/seed-status" element={<ProtectedRoute permission="settings" requireRole="owner"><SeedStatus /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/team" element={<ProtectedRoute permission="team"><Team /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />

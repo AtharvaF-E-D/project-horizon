@@ -5,7 +5,7 @@ import {
   BarChart3, Building2, UserCircle, DollarSign, Bot, CheckSquare,
   Megaphone, Activity, Mail, PieChart, Filter, Workflow, Shield,
   FileSpreadsheet, Gauge, UserX, BarChart2, LucideIcon, Receipt,
-  FileText, Share2, ShoppingCart, HelpCircle, Mic, Calendar,
+  FileText, Share2, ShoppingCart, HelpCircle, Mic, Calendar, KeyRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -52,6 +52,7 @@ const navItems: NavItem[] = [
   { icon: ShoppingCart, label: "E-commerce", path: "/ecommerce", permissionKey: "ecommerce" },
   { icon: Mic, label: "Voice Notes", path: "/voice-notes", permissionKey: "voiceNotes" },
   { icon: Shield, label: "Roles", path: "/roles", permissionKey: "roles" },
+  { icon: KeyRound, label: "Owner Status", path: "/seed-status", permissionKey: "settings" },
   { icon: HelpCircle, label: "Help & Support", path: "/help", permissionKey: "helpSupport" },
 ];
 
