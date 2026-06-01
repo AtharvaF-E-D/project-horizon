@@ -52,6 +52,7 @@ const navItems: NavItem[] = [
   { icon: ShoppingCart, label: "E-commerce", path: "/ecommerce", permissionKey: "ecommerce" },
   { icon: Mic, label: "Voice Notes", path: "/voice-notes", permissionKey: "voiceNotes" },
   { icon: Shield, label: "Roles", path: "/roles", permissionKey: "roles" },
+  { icon: KeyRound, label: "Owner Status", path: "/seed-status", permissionKey: "settings" },
   { icon: HelpCircle, label: "Help & Support", path: "/help", permissionKey: "helpSupport" },
 ];
 
