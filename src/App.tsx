@@ -54,6 +54,7 @@ import HelpSupport from "./pages/HelpSupport";
 import VoiceNotes from "./pages/VoiceNotes";
 import NotFound from "./pages/NotFound";
 import Appointments from "./pages/Appointments";
+import SeedStatus from "./pages/SeedStatus";
 import { FloatingAIButton } from "@/components/ai/FloatingAIButton";
 
 const queryClient = new QueryClient();
