@@ -115,6 +115,7 @@ const ADMIN_PERMISSIONS: RolePermissions = {
   suspendedUsers: false,
   settings: false,
   canManageRoles: false,
+  adminPanel: false,
 };
 
 const MANAGER_PERMISSIONS: RolePermissions = {
