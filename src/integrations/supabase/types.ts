@@ -53,6 +53,102 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_presence: {
+        Row: {
+          current_call_id: string | null
+          last_seen: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          current_call_id?: string | null
+          last_seen?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          current_call_id?: string | null
+          last_seen?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      agent_targets: {
+        Row: {
+          calls_target: number
+          created_at: string
+          deals_target: number
+          id: string
+          notes: string | null
+          period: string
+          period_start: string
+          revenue_target: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          calls_target?: number
+          created_at?: string
+          deals_target?: number
+          id?: string
+          notes?: string | null
+          period?: string
+          period_start: string
+          revenue_target?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          calls_target?: number
+          created_at?: string
+          deals_target?: number
+          id?: string
+          notes?: string | null
+          period?: string
+          period_start?: string
+          revenue_target?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ai_training: {
+        Row: {
+          answer: string
+          category: string
+          created_at: string
+          id: string
+          question: string | null
+          tone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answer: string
+          category?: string
+          created_at?: string
+          id?: string
+          question?: string | null
+          tone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answer?: string
+          category?: string
+          created_at?: string
+          id?: string
+          question?: string | null
+          tone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           attendee_email: string | null
@@ -164,6 +260,87 @@ export type Database = {
           user_agent?: string | null
           user_email?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      automation_workflows: {
+        Row: {
+          created_at: string
+          description: string | null
+          edges: Json
+          enabled: boolean
+          id: string
+          name: string
+          nodes: Json
+          trigger_config: Json
+          trigger_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          edges?: Json
+          enabled?: boolean
+          id?: string
+          name: string
+          nodes?: Json
+          trigger_config?: Json
+          trigger_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          edges?: Json
+          enabled?: boolean
+          id?: string
+          name?: string
+          nodes?: Json
+          trigger_config?: Json
+          trigger_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      business_settings: {
+        Row: {
+          business_hours: Json | null
+          business_name: string | null
+          created_at: string
+          id: string
+          industry: string | null
+          onboarding_completed: boolean
+          timezone: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          business_hours?: Json | null
+          business_name?: string | null
+          created_at?: string
+          id?: string
+          industry?: string | null
+          onboarding_completed?: boolean
+          timezone?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          business_hours?: Json | null
+          business_name?: string | null
+          created_at?: string
+          id?: string
+          industry?: string | null
+          onboarding_completed?: boolean
+          timezone?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
         }
         Relationships: []
       }
@@ -926,6 +1103,48 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_plans: {
+        Row: {
+          created_at: string
+          description: string | null
+          features: Json
+          id: string
+          is_active: boolean
+          max_ai_calls: number | null
+          max_users: number | null
+          name: string
+          price_monthly: number
+          price_yearly: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          max_ai_calls?: number | null
+          max_users?: number | null
+          name: string
+          price_monthly?: number
+          price_yearly?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          max_ai_calls?: number | null
+          max_users?: number | null
+          name?: string
+          price_monthly?: number
+          price_yearly?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       suspension_history: {
         Row: {
           action: string
@@ -1034,6 +1253,36 @@ export type Database = {
           invited_by?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           status?: string
+        }
+        Relationships: []
+      }
+      usage_metrics: {
+        Row: {
+          count: number
+          created_at: string
+          id: string
+          metadata: Json | null
+          metric_date: string
+          metric_type: string
+          user_id: string
+        }
+        Insert: {
+          count?: number
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          metric_date?: string
+          metric_type: string
+          user_id: string
+        }
+        Update: {
+          count?: number
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          metric_date?: string
+          metric_type?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1149,6 +1398,50 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "whatsapp_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_runs: {
+        Row: {
+          completed_at: string | null
+          error: string | null
+          id: string
+          logs: Json
+          started_at: string
+          status: string
+          trigger_data: Json | null
+          user_id: string
+          workflow_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          error?: string | null
+          id?: string
+          logs?: Json
+          started_at?: string
+          status?: string
+          trigger_data?: Json | null
+          user_id: string
+          workflow_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          error?: string | null
+          id?: string
+          logs?: Json
+          started_at?: string
+          status?: string
+          trigger_data?: Json | null
+          user_id?: string
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_runs_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "automation_workflows"
             referencedColumns: ["id"]
           },
         ]
