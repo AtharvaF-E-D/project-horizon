@@ -42,6 +42,11 @@ export interface RolePermissions {
   ecommerce: boolean;
   helpSupport: boolean;
   voiceNotes: boolean;
+  automations: boolean;
+  leaderboard: boolean;
+  targets: boolean;
+  onboarding: boolean;
+  adminPanel: boolean;
   
   // Feature permissions
   canManageRoles: boolean;
@@ -94,6 +99,11 @@ const OWNER_PERMISSIONS: RolePermissions = {
   ecommerce: true,
   helpSupport: true,
   voiceNotes: true,
+  automations: true,
+  leaderboard: true,
+  targets: true,
+  onboarding: true,
+  adminPanel: true,
 };
 
 const ADMIN_PERMISSIONS: RolePermissions = {
