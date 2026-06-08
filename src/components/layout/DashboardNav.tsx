@@ -6,6 +6,7 @@ import {
   Megaphone, Activity, Mail, PieChart, Filter, Workflow, Shield,
   FileSpreadsheet, Gauge, UserX, BarChart2, LucideIcon, Receipt,
   FileText, Share2, ShoppingCart, HelpCircle, Mic, Calendar, KeyRound,
+  Zap, Trophy, Target, Rocket, ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -51,6 +52,11 @@ const navItems: NavItem[] = [
   { icon: Share2, label: "Social Media", path: "/social-media", permissionKey: "socialMedia" },
   { icon: ShoppingCart, label: "E-commerce", path: "/ecommerce", permissionKey: "ecommerce" },
   { icon: Mic, label: "Voice Notes", path: "/voice-notes", permissionKey: "voiceNotes" },
+  { icon: Zap, label: "Automations", path: "/automations", permissionKey: "automations" },
+  { icon: Trophy, label: "Leaderboard", path: "/leaderboard", permissionKey: "leaderboard" },
+  { icon: Target, label: "Targets", path: "/targets", permissionKey: "targets" },
+  { icon: Rocket, label: "Onboarding", path: "/onboarding", permissionKey: "onboarding" },
+  { icon: ShieldCheck, label: "Admin Panel", path: "/admin", permissionKey: "adminPanel" },
   { icon: Shield, label: "Roles", path: "/roles", permissionKey: "roles" },
   { icon: KeyRound, label: "Owner Status", path: "/seed-status", permissionKey: "settings" },
   { icon: HelpCircle, label: "Help & Support", path: "/help", permissionKey: "helpSupport" },

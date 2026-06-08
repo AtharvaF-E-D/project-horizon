@@ -42,6 +42,11 @@ export interface RolePermissions {
   ecommerce: boolean;
   helpSupport: boolean;
   voiceNotes: boolean;
+  automations: boolean;
+  leaderboard: boolean;
+  targets: boolean;
+  onboarding: boolean;
+  adminPanel: boolean;
   
   // Feature permissions
   canManageRoles: boolean;
@@ -94,6 +99,11 @@ const OWNER_PERMISSIONS: RolePermissions = {
   ecommerce: true,
   helpSupport: true,
   voiceNotes: true,
+  automations: true,
+  leaderboard: true,
+  targets: true,
+  onboarding: true,
+  adminPanel: true,
 };
 
 const ADMIN_PERMISSIONS: RolePermissions = {
@@ -105,6 +115,7 @@ const ADMIN_PERMISSIONS: RolePermissions = {
   suspendedUsers: false,
   settings: false,
   canManageRoles: false,
+  adminPanel: false,
 };
 
 const MANAGER_PERMISSIONS: RolePermissions = {
@@ -147,6 +158,11 @@ const MANAGER_PERMISSIONS: RolePermissions = {
   ecommerce: true,
   helpSupport: true,
   voiceNotes: true,
+  automations: true,
+  leaderboard: true,
+  targets: true,
+  onboarding: true,
+  adminPanel: false,
 };
 
 const AGENT_PERMISSIONS: RolePermissions = {
@@ -189,6 +205,11 @@ const AGENT_PERMISSIONS: RolePermissions = {
   ecommerce: false,
   helpSupport: true,
   voiceNotes: true,
+  automations: false,
+  leaderboard: true,
+  targets: false,
+  onboarding: true,
+  adminPanel: false,
 };
 
 const VIEWER_PERMISSIONS: RolePermissions = {
@@ -231,6 +252,11 @@ const VIEWER_PERMISSIONS: RolePermissions = {
   ecommerce: true,
   helpSupport: true,
   voiceNotes: false,
+  automations: false,
+  leaderboard: true,
+  targets: false,
+  onboarding: false,
+  adminPanel: false,
 };
 
 export const ROLE_PERMISSIONS: Record<AppRole, RolePermissions> = {
