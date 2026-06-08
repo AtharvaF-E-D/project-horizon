@@ -65,6 +65,9 @@ import { useAgentPresence } from "@/hooks/useAgentPresence";
 
 const queryClient = new QueryClient();
 
+const PresenceTracker = () => { useAgentPresence(); return null; };
+
+
 const App = () => (
   <ErrorBoundary>
   <QueryClientProvider client={queryClient}>
@@ -140,6 +143,7 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
         <FloatingAIButton />
+        <PresenceTracker />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
