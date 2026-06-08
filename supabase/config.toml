@@ -8,3 +8,6 @@ verify_jwt = true
 
 [functions.seed-owner]
 verify_jwt = false
+
+[functions.workflow-executor]
+verify_jwt = true
