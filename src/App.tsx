@@ -55,7 +55,13 @@ import VoiceNotes from "./pages/VoiceNotes";
 import NotFound from "./pages/NotFound";
 import Appointments from "./pages/Appointments";
 import SeedStatus from "./pages/SeedStatus";
+import Automations from "./pages/Automations";
+import Leaderboard from "./pages/Leaderboard";
+import Targets from "./pages/Targets";
+import Onboarding from "./pages/Onboarding";
+import AdminPanel from "./pages/AdminPanel";
 import { FloatingAIButton } from "@/components/ai/FloatingAIButton";
+import { useAgentPresence } from "@/hooks/useAgentPresence";
 
 const queryClient = new QueryClient();
 
@@ -124,6 +130,11 @@ const App = () => (
           <Route path="/help" element={<ProtectedRoute permission="helpSupport"><HelpSupport /></ProtectedRoute>} />
           <Route path="/voice-notes" element={<ProtectedRoute permission="voiceNotes"><VoiceNotes /></ProtectedRoute>} />
           <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
+          <Route path="/automations" element={<ProtectedRoute permission="automations"><Automations /></ProtectedRoute>} />
+          <Route path="/leaderboard" element={<ProtectedRoute permission="leaderboard"><Leaderboard /></ProtectedRoute>} />
+          <Route path="/targets" element={<ProtectedRoute permission="targets"><Targets /></ProtectedRoute>} />
+          <Route path="/onboarding" element={<ProtectedRoute permission="onboarding"><Onboarding /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute permission="adminPanel" requireRole="owner"><AdminPanel /></ProtectedRoute>} />
 
           {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
