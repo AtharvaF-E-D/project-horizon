@@ -57,6 +57,7 @@ const navItems: NavItem[] = [
   { icon: Target, label: "Targets", path: "/targets", permissionKey: "targets" },
   { icon: Rocket, label: "Onboarding", path: "/onboarding", permissionKey: "onboarding" },
   { icon: ShieldCheck, label: "Admin Panel", path: "/admin", permissionKey: "adminPanel" },
+  { icon: BarChart3, label: "Usage Dashboard", path: "/admin/usage", permissionKey: "adminPanel" },
   { icon: Shield, label: "Roles", path: "/roles", permissionKey: "roles" },
   { icon: KeyRound, label: "Owner Status", path: "/seed-status", permissionKey: "settings" },
   { icon: HelpCircle, label: "Help & Support", path: "/help", permissionKey: "helpSupport" },

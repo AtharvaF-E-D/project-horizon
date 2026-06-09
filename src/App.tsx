@@ -60,6 +60,7 @@ import Leaderboard from "./pages/Leaderboard";
 import Targets from "./pages/Targets";
 import Onboarding from "./pages/Onboarding";
 import AdminPanel from "./pages/AdminPanel";
+import UsageDashboard from "./pages/UsageDashboard";
 import { FloatingAIButton } from "@/components/ai/FloatingAIButton";
 import { useAgentPresence } from "@/hooks/useAgentPresence";
 
@@ -138,6 +139,7 @@ const App = () => (
           <Route path="/targets" element={<ProtectedRoute permission="targets"><Targets /></ProtectedRoute>} />
           <Route path="/onboarding" element={<ProtectedRoute permission="onboarding"><Onboarding /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute permission="adminPanel" requireRole="owner"><AdminPanel /></ProtectedRoute>} />
+          <Route path="/admin/usage" element={<ProtectedRoute permission="adminPanel" requireRole="owner"><UsageDashboard /></ProtectedRoute>} />
 
           {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
