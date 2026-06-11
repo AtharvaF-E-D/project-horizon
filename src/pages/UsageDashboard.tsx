@@ -145,8 +145,8 @@ const UsageDashboard = () => {
     setDrillRows([]);
     try {
       if (state.kind === "runs") {
-        let q = supabase.from("workflow_runs")
-          .select("id, status, started_at, completed_at, workflow_id, error_message, automation_workflows(name)")
+        let q: any = supabase.from("workflow_runs")
+          .select("id, status, started_at, completed_at, workflow_id, error_message")
           .order("started_at", { ascending: false })
           .limit(200);
         if (state.date) {
@@ -156,7 +156,14 @@ const UsageDashboard = () => {
         if (state.status) q = q.eq("status", state.status);
         const { data, error } = await q;
         if (error) throw error;
-        setDrillRows(data || []);
+        const rows = (data || []) as any[];
+        const ids = Array.from(new Set(rows.map(r => r.workflow_id).filter(Boolean)));
+        let nameMap = new Map<string, string>();
+        if (ids.length > 0) {
+          const { data: wfs } = await supabase.from("automation_workflows").select("id, name").in("id", ids);
+          (wfs || []).forEach((w: any) => nameMap.set(w.id, w.name));
+        }
+        setDrillRows(rows.map(r => ({ ...r, workflow_name: nameMap.get(r.workflow_id) || "Workflow" })));
       } else if (state.kind === "training") {
         let q = supabase.from("ai_training")
           .select("id, training_type, content, created_at, user_id")
