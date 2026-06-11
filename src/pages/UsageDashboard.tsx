@@ -165,7 +165,7 @@ const UsageDashboard = () => {
         }
         setDrillRows(rows.map(r => ({ ...r, workflow_name: nameMap.get(r.workflow_id) || "Workflow" })));
       } else if (state.kind === "training") {
-        let q = supabase.from("ai_training")
+        let q: any = supabase.from("ai_training")
           .select("id, training_type, content, created_at, user_id")
           .order("created_at", { ascending: false })
           .limit(200);
