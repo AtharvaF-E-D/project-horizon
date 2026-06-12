@@ -188,17 +188,35 @@ const UsageDashboard = () => {
     }
   };
 
+  const today = formatDay(new Date());
+
+  const filteredDrillRows = useMemo(() => {
+    const q = drillSearch.trim().toLowerCase();
+    if (!q) return drillRows;
+    if (drill.kind === "runs") {
+      return drillRows.filter((r: any) =>
+        (r.workflow_name || "").toLowerCase().includes(q) ||
+        (r.status || "").toLowerCase().includes(q) ||
+        (r.error_message || "").toLowerCase().includes(q)
+      );
+    }
+    return drillRows.filter((r: any) =>
+      (r.training_type || "").toLowerCase().includes(q) ||
+      (typeof r.content === "string" ? r.content : JSON.stringify(r.content)).toLowerCase().includes(q)
+    );
+  }, [drillRows, drillSearch, drill.kind]);
+
   const exportAll = () => {
-    downloadCsv(`usage-daily-${range}d.csv`, series as any);
+    downloadCsv(`usage-daily-${range}d-${today}.csv`, series as any);
   };
-  const exportStatus = () => downloadCsv(`run-status-${range}d.csv`, statusSlices as any);
-  const exportTrainingType = () => downloadCsv(`training-by-type-${range}d.csv`, trainingByType as any);
+  const exportStatus = () => downloadCsv(`run-status-${range}d-${today}.csv`, statusSlices as any);
+  const exportTrainingType = () => downloadCsv(`training-by-type-${range}d-${today}.csv`, trainingByType as any);
   const exportDrill = () => {
-    const flat = drillRows.map(r => {
+    const flat = filteredDrillRows.map(r => {
       const { automation_workflows, ...rest } = r;
       return { ...rest, workflow_name: automation_workflows?.name ?? "" };
     });
-    downloadCsv(`drilldown-${drill.kind}-${drill.date || drill.status || drill.trainingType || "all"}.csv`, flat);
+    downloadCsv(`drilldown-${drill.kind}-${drill.date || drill.status || drill.trainingType || "all"}-${range}d-${today}.csv`, flat);
   };
 
   const kpis = useMemo(() => ([
