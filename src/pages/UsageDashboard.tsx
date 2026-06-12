@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
@@ -65,6 +66,7 @@ const UsageDashboard = () => {
   const [drill, setDrill] = useState<DrillState>({ kind: null });
   const [drillLoading, setDrillLoading] = useState(false);
   const [drillRows, setDrillRows] = useState<any[]>([]);
+  const [drillSearch, setDrillSearch] = useState("");
 
   const load = async () => {
     setLoading(true);
@@ -140,6 +142,7 @@ const UsageDashboard = () => {
   };
 
   const openDrill = async (state: DrillState) => {
+    setDrillSearch("");
     setDrill(state);
     setDrillLoading(true);
     setDrillRows([]);
@@ -185,17 +188,35 @@ const UsageDashboard = () => {
     }
   };
 
+  const today = formatDay(new Date());
+
+  const filteredDrillRows = useMemo(() => {
+    const q = drillSearch.trim().toLowerCase();
+    if (!q) return drillRows;
+    if (drill.kind === "runs") {
+      return drillRows.filter((r: any) =>
+        (r.workflow_name || "").toLowerCase().includes(q) ||
+        (r.status || "").toLowerCase().includes(q) ||
+        (r.error_message || "").toLowerCase().includes(q)
+      );
+    }
+    return drillRows.filter((r: any) =>
+      (r.training_type || "").toLowerCase().includes(q) ||
+      (typeof r.content === "string" ? r.content : JSON.stringify(r.content)).toLowerCase().includes(q)
+    );
+  }, [drillRows, drillSearch, drill.kind]);
+
   const exportAll = () => {
-    downloadCsv(`usage-daily-${range}d.csv`, series as any);
+    downloadCsv(`usage-daily-${range}d-${today}.csv`, series as any);
   };
-  const exportStatus = () => downloadCsv(`run-status-${range}d.csv`, statusSlices as any);
-  const exportTrainingType = () => downloadCsv(`training-by-type-${range}d.csv`, trainingByType as any);
+  const exportStatus = () => downloadCsv(`run-status-${range}d-${today}.csv`, statusSlices as any);
+  const exportTrainingType = () => downloadCsv(`training-by-type-${range}d-${today}.csv`, trainingByType as any);
   const exportDrill = () => {
-    const flat = drillRows.map(r => {
+    const flat = filteredDrillRows.map(r => {
       const { automation_workflows, ...rest } = r;
       return { ...rest, workflow_name: automation_workflows?.name ?? "" };
     });
-    downloadCsv(`drilldown-${drill.kind}-${drill.date || drill.status || drill.trainingType || "all"}.csv`, flat);
+    downloadCsv(`drilldown-${drill.kind}-${drill.date || drill.status || drill.trainingType || "all"}-${range}d-${today}.csv`, flat);
   };
 
   const kpis = useMemo(() => ([
@@ -262,6 +283,16 @@ const UsageDashboard = () => {
             );
           })}
         </div>
+
+        {!loading && totals.runs === 0 && totals.workflows === 0 && totals.training === 0 && (
+          <Card className="mb-6">
+            <CardContent className="py-16 text-center">
+              <BarChart3 className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-40" />
+              <h3 className="text-lg font-medium mb-1">No data for this range</h3>
+              <p className="text-muted-foreground max-w-md mx-auto">There are no workflow runs, automations, or AI training records for the selected {range}-day range. Try a wider date range or check back later.</p>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="lg:col-span-2">
@@ -387,7 +418,7 @@ const UsageDashboard = () => {
           </Card>
         </div>
 
-        <Sheet open={drill.kind !== null} onOpenChange={(o) => !o && setDrill({ kind: null })}>
+        <Sheet open={drill.kind !== null} onOpenChange={(o) => { if (!o) { setDrill({ kind: null }); setDrillSearch(""); } }}>
           <SheetContent className="w-full sm:max-w-2xl overflow-hidden flex flex-col">
             <SheetHeader>
               <SheetTitle>
@@ -397,12 +428,18 @@ const UsageDashboard = () => {
                 {drill.date && <span>Date: <strong>{drill.date}</strong> · </span>}
                 {drill.status && <span>Status: <strong>{drill.status}</strong> · </span>}
                 {drill.trainingType && <span>Type: <strong>{drill.trainingType}</strong> · </span>}
-                <span>{drillRows.length} record{drillRows.length === 1 ? "" : "s"}</span>
+                <span>{filteredDrillRows.length} of {drillRows.length} record{drillRows.length === 1 ? "" : "s"}</span>
               </SheetDescription>
             </SheetHeader>
 
-            <div className="flex items-center justify-end gap-2 my-3">
-              <Button variant="outline" size="sm" onClick={exportDrill} disabled={drillRows.length === 0}>
+            <div className="flex items-center gap-2 my-3">
+              <Input
+                placeholder={drill.kind === "runs" ? "Search workflow, status, or error…" : "Search type or content…"}
+                value={drillSearch}
+                onChange={(e) => setDrillSearch(e.target.value)}
+                className="flex-1"
+              />
+              <Button variant="outline" size="sm" onClick={exportDrill} disabled={filteredDrillRows.length === 0}>
                 <Download className="w-3.5 h-3.5 mr-1" /> Export CSV
               </Button>
             </div>
@@ -412,14 +449,14 @@ const UsageDashboard = () => {
                 <div className="space-y-2">
                   {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
                 </div>
-              ) : drillRows.length === 0 ? (
-                <div className="text-center text-muted-foreground py-12">No records found.</div>
+              ) : filteredDrillRows.length === 0 ? (
+                <div className="text-center text-muted-foreground py-12">No matching records found.</div>
               ) : drill.kind === "runs" ? (
                 <div className="space-y-2 pb-6">
-                  {drillRows.map((r: any) => (
+                  {filteredDrillRows.map((r: any) => (
                     <div key={r.id} className="border rounded-md p-3 text-sm">
                       <div className="flex items-center justify-between mb-1">
-                        <div className="font-medium truncate">{r.automation_workflows?.name || "Workflow"}</div>
+                        <div className="font-medium truncate">{r.workflow_name || "Workflow"}</div>
                         <Badge variant={r.status === "completed" || r.status === "success" ? "default" : r.status === "failed" || r.status === "error" ? "destructive" : "secondary"}>
                           {r.status}
                         </Badge>
@@ -436,7 +473,7 @@ const UsageDashboard = () => {
                 </div>
               ) : (
                 <div className="space-y-2 pb-6">
-                  {drillRows.map((r: any) => (
+                  {filteredDrillRows.map((r: any) => (
                     <div key={r.id} className="border rounded-md p-3 text-sm">
                       <div className="flex items-center justify-between mb-1">
                         <Badge variant="outline">{r.training_type || "general"}</Badge>
