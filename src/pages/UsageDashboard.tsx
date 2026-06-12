@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
@@ -65,6 +66,7 @@ const UsageDashboard = () => {
   const [drill, setDrill] = useState<DrillState>({ kind: null });
   const [drillLoading, setDrillLoading] = useState(false);
   const [drillRows, setDrillRows] = useState<any[]>([]);
+  const [drillSearch, setDrillSearch] = useState("");
 
   const load = async () => {
     setLoading(true);
@@ -140,6 +142,7 @@ const UsageDashboard = () => {
   };
 
   const openDrill = async (state: DrillState) => {
+    setDrillSearch("");
     setDrill(state);
     setDrillLoading(true);
     setDrillRows([]);
@@ -262,6 +265,16 @@ const UsageDashboard = () => {
             );
           })}
         </div>
+
+        {!loading && totals.runs === 0 && totals.workflows === 0 && totals.training === 0 && (
+          <Card className="mb-6">
+            <CardContent className="py-16 text-center">
+              <BarChart3 className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-40" />
+              <h3 className="text-lg font-medium mb-1">No data for this range</h3>
+              <p className="text-muted-foreground max-w-md mx-auto">There are no workflow runs, automations, or AI training records for the selected {range}-day range. Try a wider date range or check back later.</p>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="lg:col-span-2">
