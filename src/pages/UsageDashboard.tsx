@@ -400,7 +400,7 @@ const UsageDashboard = () => {
           </Card>
         </div>
 
-        <Sheet open={drill.kind !== null} onOpenChange={(o) => !o && setDrill({ kind: null })}>
+        <Sheet open={drill.kind !== null} onOpenChange={(o) => { if (!o) { setDrill({ kind: null }); setDrillSearch(""); } }}>
           <SheetContent className="w-full sm:max-w-2xl overflow-hidden flex flex-col">
             <SheetHeader>
               <SheetTitle>
@@ -410,12 +410,18 @@ const UsageDashboard = () => {
                 {drill.date && <span>Date: <strong>{drill.date}</strong> · </span>}
                 {drill.status && <span>Status: <strong>{drill.status}</strong> · </span>}
                 {drill.trainingType && <span>Type: <strong>{drill.trainingType}</strong> · </span>}
-                <span>{drillRows.length} record{drillRows.length === 1 ? "" : "s"}</span>
+                <span>{filteredDrillRows.length} of {drillRows.length} record{drillRows.length === 1 ? "" : "s"}</span>
               </SheetDescription>
             </SheetHeader>
 
-            <div className="flex items-center justify-end gap-2 my-3">
-              <Button variant="outline" size="sm" onClick={exportDrill} disabled={drillRows.length === 0}>
+            <div className="flex items-center gap-2 my-3">
+              <Input
+                placeholder={drill.kind === "runs" ? "Search workflow, status, or error…" : "Search type or content…"}
+                value={drillSearch}
+                onChange={(e) => setDrillSearch(e.target.value)}
+                className="flex-1"
+              />
+              <Button variant="outline" size="sm" onClick={exportDrill} disabled={filteredDrillRows.length === 0}>
                 <Download className="w-3.5 h-3.5 mr-1" /> Export CSV
               </Button>
             </div>
@@ -425,14 +431,14 @@ const UsageDashboard = () => {
                 <div className="space-y-2">
                   {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
                 </div>
-              ) : drillRows.length === 0 ? (
-                <div className="text-center text-muted-foreground py-12">No records found.</div>
+              ) : filteredDrillRows.length === 0 ? (
+                <div className="text-center text-muted-foreground py-12">No matching records found.</div>
               ) : drill.kind === "runs" ? (
                 <div className="space-y-2 pb-6">
-                  {drillRows.map((r: any) => (
+                  {filteredDrillRows.map((r: any) => (
                     <div key={r.id} className="border rounded-md p-3 text-sm">
                       <div className="flex items-center justify-between mb-1">
-                        <div className="font-medium truncate">{r.automation_workflows?.name || "Workflow"}</div>
+                        <div className="font-medium truncate">{r.workflow_name || "Workflow"}</div>
                         <Badge variant={r.status === "completed" || r.status === "success" ? "default" : r.status === "failed" || r.status === "error" ? "destructive" : "secondary"}>
                           {r.status}
                         </Badge>
@@ -449,7 +455,7 @@ const UsageDashboard = () => {
                 </div>
               ) : (
                 <div className="space-y-2 pb-6">
-                  {drillRows.map((r: any) => (
+                  {filteredDrillRows.map((r: any) => (
                     <div key={r.id} className="border rounded-md p-3 text-sm">
                       <div className="flex items-center justify-between mb-1">
                         <Badge variant="outline">{r.training_type || "general"}</Badge>
