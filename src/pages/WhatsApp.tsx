@@ -414,46 +414,41 @@ export default function WhatsApp() {
     };
     setMessages(prev => [...prev, optimisticMsg]);
 
-    const { data, error } = await supabase
-      .from("whatsapp_messages")
-      .insert({
+    // Send through Meta WhatsApp Cloud API via edge function
+    const { data, error } = await supabase.functions.invoke("whatsapp-send", {
+      body: {
         conversation_id: selectedConversation.id,
-        user_id: user.id,
-        sender: "me",
         text,
-        status: "sent",
-        file_url: fileData?.url || null,
-        file_name: fileData?.name || null,
-        file_type: fileData?.type || null,
-      })
-      .select()
-      .single();
+        file_url: fileData?.url ?? null,
+        file_name: fileData?.name ?? null,
+        file_type: fileData?.type ?? null,
+      },
+    });
 
-    if (error) {
-      toast.error("Failed to send message");
+    if (error || !data?.ok) {
+      const detail =
+        (data as any)?.details?.error?.message ||
+        (data as any)?.error ||
+        error?.message ||
+        "Failed to send message";
+      toast.error(detail);
       setMessages(prev => prev.filter(m => m.id !== tempId));
       return;
     }
 
-    // Replace optimistic msg with real one
+    const real = (data as any).message;
     setMessages(prev => prev.map(m => m.id === tempId ? {
-      id: data.id,
+      id: real.id,
       sender: "me",
-      text: data.text,
-      status: data.status as Message["status"],
-      created_at: data.created_at,
-      file_url: data.file_url,
-      file_name: data.file_name,
-      file_type: data.file_type,
+      text: real.text,
+      status: real.status as Message["status"],
+      created_at: real.created_at,
+      file_url: real.file_url,
+      file_name: real.file_name,
+      file_type: real.file_type,
     } : m));
 
     const displayText = fileData ? `📎 ${fileData.name}` : text;
-
-    // Update conversation last_message
-    await supabase
-      .from("whatsapp_conversations")
-      .update({ last_message: displayText, last_message_at: new Date().toISOString() })
-      .eq("id", selectedConversation.id);
 
     setConversations(prev =>
       prev.map(c =>
@@ -465,6 +460,7 @@ export default function WhatsApp() {
 
     toast.success("Message sent");
   };
+
 
   const handleCreateConversation = async () => {
     if (!newConvoName.trim() || !newConvoPhone.trim() || !user) return;
@@ -906,8 +902,9 @@ export default function WhatsApp() {
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={handleSimulateReply} className="gap-2">
                               <BotMessageSquare className="w-4 h-4" />
-                              Simulate Reply
+                              Simulate Reply (dev)
                             </DropdownMenuItem>
+
                             <DropdownMenuItem
                               onClick={async () => {
                                 await supabase.from("whatsapp_messages").delete().eq("conversation_id", selectedConversation.id);

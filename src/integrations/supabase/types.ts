@@ -1365,6 +1365,7 @@ export type Database = {
           status: string
           text: string
           user_id: string
+          wa_message_id: string | null
         }
         Insert: {
           ai_intent?: string | null
@@ -1378,6 +1379,7 @@ export type Database = {
           status?: string
           text: string
           user_id: string
+          wa_message_id?: string | null
         }
         Update: {
           ai_intent?: string | null
@@ -1391,6 +1393,7 @@ export type Database = {
           status?: string
           text?: string
           user_id?: string
+          wa_message_id?: string | null
         }
         Relationships: [
           {
