@@ -902,8 +902,9 @@ export default function WhatsApp() {
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={handleSimulateReply} className="gap-2">
                               <BotMessageSquare className="w-4 h-4" />
-                              Simulate Reply
+                              Simulate Reply (dev)
                             </DropdownMenuItem>
+
                             <DropdownMenuItem
                               onClick={async () => {
                                 await supabase.from("whatsapp_messages").delete().eq("conversation_id", selectedConversation.id);
